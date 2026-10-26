@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK v2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
         tailwind.config = {
@@ -2515,7 +2517,7 @@
                     if (k.lastUpdatedInfo) {
                         statKeuSub.innerText = k.lastUpdatedInfo;
                     } else if (unverifiedBerkas > 0) {
-                        statKeuSub.innerText = `Jajan ${k.nominalUangJajan || ''} • Berkas ${verifiedBerkas}/${berkasList.length}`;
+                        statKeuSub.innerText = `Jajan ${k.nominalUangJajan || ''} • Berkas verifiedBerkas/{berkasList.length}`;
                     } else {
                         statKeuSub.innerText = `Jajan: ${k.nominalUangJajan || 'Masih Ada'} • Aman`;
                     }
@@ -2546,7 +2548,7 @@
                     statAkadSub.innerText = child.lastCapaianSummary;
                 } else {
                     const lastAk = (semData.akademik || [])[semData.akademik.length - 1];
-                    statAkadSub.innerText = lastAk ? `${lastAk.mapel} (${lastAk.akhir})` : "Rapor Semester";
+                    statAkadSub.innerText = lastAk ? `lastAk.mapel({lastAk.akhir})` : "Rapor Semester";
                 }
             }
 
@@ -2601,7 +2603,7 @@
             if (list.length > 0) {
                 const latest = list[0];
                 child.hafalan = `${latest.juz} Juz`;
-                child.hafalanRecent = `${latest.surat} (${latest.predikat})`;
+                child.hafalanRecent = `latest.surat({latest.predikat})`;
 
                 // Perbarui lencana hafalan santri di profil agar sesuai dengan input terakhir
                 const badgeHafalan = (child.lencana || []).find(l =>
@@ -2630,7 +2632,7 @@
             const btnEditWaMusyrif = document.getElementById('btnEditWaMusyrifRole');
             const btnUbahStatusJajan = document.getElementById('btnUbahStatusUangJajanAdmin');
             const btnManageKeuangan = document.getElementById('btnManageKeuanganAdmin');
-            const btnManageBerkas = document.getElementById('btnManageBerkasModal');
+            // btnManageBerkas handled via btnManageBerkasEl
             const btnManageBerkasEl = document.getElementById('btnManageBerkasAdmin');
             const btnAddPelanggaran = document.getElementById('btnAddPelanggaranAdmin');
             const btnEditCapaian = document.getElementById('btnEditCapaianGuru');
@@ -2758,7 +2760,7 @@
                 const cData = child && child.capaianPerSemester && child.capaianPerSemester[s.id];
                 const isPillarArchived = (cData && cData.arsipStatus && cData.arsipStatus[pillar]) || !s.isAktif;
                 const customLbl = cData && cData.arsipLabel && cData.arsipLabel[pillar];
-                const textLabel = customLbl ? customLbl : `Semester ${s.sem} ${s.ta} (${isPillarArchived ? 'Arsip' : 'Aktif'})`;
+                const textLabel = customLbl ? customLbl : `Semester ${s.sem} s.ta({isPillarArchived ? 'Arsip' : 'Aktif'})`;
                 return `
                     <option value="${s.id}" ${s.id === AppState.selectedSemesterId ? 'selected' : ''}>
                         ${textLabel}
@@ -2771,7 +2773,7 @@
                 const cData = child && child.capaianPerSemester && child.capaianPerSemester[curSem.id];
                 const isPillarArchived = (cData && cData.arsipStatus && cData.arsipStatus[pillar]) || !curSem.isAktif;
                 const customLbl = cData && cData.arsipLabel && cData.arsipLabel[pillar];
-                displayLabel.innerText = customLbl ? customLbl : `Semester ${curSem.sem} ${curSem.ta} (${isPillarArchived ? 'Arsip' : 'Aktif'})`;
+                displayLabel.innerText = customLbl ? customLbl : `Semester ${curSem.sem} curSem.ta({isPillarArchived ? 'Arsip' : 'Aktif'})`;
             }
         }
 
@@ -2860,7 +2862,7 @@
                             <p class="text-[10px] text-slate-500">${a.capaian}</p>
                         </div>
                         <div class="text-right flex-shrink-0 ml-2">
-                            <span class="text-xs font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">${a.akhir} (${a.predikat})</span>
+                            <span class="text-xs font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">a.akhir({a.predikat})</span>
                         </div>
                     </div>
                 `).join('');
@@ -2878,7 +2880,7 @@
                             <p class="text-[10px] text-slate-500">${k.bidang} • ${k.bab}</p>
                         </div>
                         <div class="text-right flex-shrink-0 ml-2">
-                            <span class="text-[10px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-md">${k.status} (${k.nilai})</span>
+                            <span class="text-[10px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-md">k.status({k.nilai})</span>
                         </div>
                     </div>
                 `).join('');
@@ -2948,11 +2950,11 @@
                     <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div>
                             <h5 class="font-bold text-xs text-slate-800">${p.pos}</h5>
-                            <span class="text-[10px] text-slate-500">${p.ket} • <strong>${p.nominal}</strong></span>
+                            <span class="text-[10px] text-slate-500">p.ket•<strong>{p.nominal}</strong></span>
                         </div>
                         <div>
                             ${p.status === 'BELUM LUNAS' ? `
-                                <button onclick="openBayarTagihanModal('${p.pos}', '${p.nominal}')" class="px-2.5 py-1 bg-amber-400 text-elwa-dark font-black text-[10px] rounded-lg shadow-sm">
+                                <button onclick="openBayarTagihanModal('p.pos','{p.nominal}')" class="px-2.5 py-1 bg-amber-400 text-elwa-dark font-black text-[10px] rounded-lg shadow-sm">
                                     Bayar
                                 </button>
                             ` : `
@@ -2967,7 +2969,7 @@
 
             // POIN 2: BERKAS ADMINISTRASI FISIK KE TU (TANPA UNGGAH FILE)
             const verifiedCount = k.berkas.filter(b => b.verified).length;
-            document.getElementById('keuanganBerkasRatio').innerText = `${verifiedCount}/${k.berkas.length} Berkas Fisik`;
+            document.getElementById('keuanganBerkasRatio').innerText = `verifiedCount/{k.berkas.length} Berkas Fisik`;
             
             document.getElementById('berkasContainer').innerHTML = k.berkas.map(b => `
                 <div class="p-2.5 rounded-2xl border ${b.verified ? 'border-emerald-200 bg-emerald-50/40' : 'border-amber-300 bg-amber-50/50'} flex items-center justify-between">
@@ -3404,7 +3406,7 @@
                     <div id="editLencanaListContainer" class="space-y-2">
                         ${child.lencana.map((b, idx) => `
                             <div class="p-2 rounded-xl border border-slate-200 bg-slate-50 flex items-center space-x-2">
-                                <input id="inpLencanaNama_${idx}" type="text" class="flex-grow p-1.5 rounded-lg border border-slate-300 text-xs font-bold" value="${b.nama}">
+                                <input id="inpLencanaNama_idx"type="text"class="flex-growp-1.5rounded-lgborderborder-slate-300text-xsfont-bold"value="{b.nama}">
                                 <button type="button" onclick="removeLencanaItem(${idx})" class="px-2.5 py-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-200">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
@@ -3549,8 +3551,8 @@
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-1.5">
-                                <input id="inpPosNom_${idx}" type="text" class="p-1.5 rounded-lg border border-slate-300 text-xs" value="${p.nominal}">
-                                <input id="inpPosKet_${idx}" type="text" class="p-1.5 rounded-lg border border-slate-300 text-xs" value="${p.ket}">
+                                <input id="inpPosNom_idx"type="text"class="p-1.5rounded-lgborderborder-slate-300text-xs"value="{p.nominal}">
+                                <input id="inpPosKet_idx"type="text"class="p-1.5rounded-lgborderborder-slate-300text-xs"value="{p.ket}">
                             </div>
                         </div>
                     `).join('')}
@@ -3574,7 +3576,7 @@
                     child.keuangan.nominalUangJajan = jajanPos.nominal;
                 }
                 const unpaid = child.keuangan.pos.filter(p => p.status === 'BELUM LUNAS');
-                child.keuangan.lastUpdatedInfo = unpaid.length > 0 ? `${unpaid[0].pos}: Belum Lunas` : `Jajan: ${child.keuangan.nominalUangJajan || 'Rp 0'} (${child.keuangan.statusUangJajan})`;
+                child.keuangan.lastUpdatedInfo = unpaid.length > 0 ? `${unpaid[0].pos}: Belum Lunas` : `Jajan: child.keuangan.nominalUangJajan||'Rp0'({child.keuangan.statusUangJajan})`;
                 renderChildKeuangan(child);
                 syncDashboardRekapCards(child);
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
@@ -3743,11 +3745,11 @@
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-slate-800">${a.mapel}</span>
                                         <div class="flex items-center space-x-1">
-                                            <input type="number" id="inpNilaiAkhir_${idx}" class="w-16 p-1 border rounded text-xs text-center font-bold bg-white" value="${a.akhir}">
-                                            <input type="text" id="inpNilaiPred_${idx}" class="w-12 p-1 border rounded text-xs text-center font-bold bg-white" value="${a.predikat}">
+                                            <input type="number" id="inpNilaiAkhir_idx"class="w-16p-1borderroundedtext-xstext-centerfont-boldbg-white"value="{a.akhir}">
+                                            <input type="text" id="inpNilaiPred_idx"class="w-12p-1borderroundedtext-xstext-centerfont-boldbg-white"value="{a.predikat}">
                                         </div>
                                     </div>
-                                    <input type="text" id="inpNilaiCap_${idx}" class="w-full p-1.5 border rounded text-xs bg-white" value="${a.capaian}">
+                                    <input type="text" id="inpNilaiCap_idx"class="w-fullp-1.5borderroundedtext-xsbg-white"value="{a.capaian}">
                                 </div>
                             `).join('')}
                         </div>
@@ -3770,7 +3772,7 @@
                         if (cap) a.capaian = cap.value;
                     });
                     const lastItem = semData.akademik[semData.akademik.length - 1];
-                    if (lastItem) child.lastCapaianSummary = `${lastItem.mapel} (${lastItem.akhir})`;
+                    if (lastItem) child.lastCapaianSummary = `lastItem.mapel({lastItem.akhir})`;
                     renderChildCapaian(child);
                     syncDashboardRekapCards(child);
                     if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
@@ -3790,12 +3792,12 @@
                                 <div class="p-2 border rounded-xl bg-slate-50 space-y-1.5">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold text-slate-800">${k.kitab}</span>
-                                        <input type="number" id="inpKitabNilai_${idx}" class="w-16 p-1 border rounded text-xs text-center font-bold bg-white" value="${k.nilai}">
+                                        <input type="number" id="inpKitabNilai_idx"class="w-16p-1borderroundedtext-xstext-centerfont-boldbg-white"value="{k.nilai}">
                                     </div>
                                     <div class="grid grid-cols-3 gap-1">
-                                        <input type="text" id="inpKitabBidang_${idx}" class="p-1 border rounded text-[11px] bg-white" value="${k.bidang}">
-                                        <input type="text" id="inpKitabBab_${idx}" class="p-1 border rounded text-[11px] bg-white" value="${k.bab}">
-                                        <input type="text" id="inpKitabStatus_${idx}" class="p-1 border rounded text-[11px] font-bold bg-white" value="${k.status}">
+                                        <input type="text" id="inpKitabBidang_idx"class="p-1borderroundedtext-[11px]bg-white"value="{k.bidang}">
+                                        <input type="text" id="inpKitabBab_idx"class="p-1borderroundedtext-[11px]bg-white"value="{k.bab}">
+                                        <input type="text" id="inpKitabStatus_idx"class="p-1borderroundedtext-[11px]font-boldbg-white"value="{k.status}">
                                     </div>
                                 </div>
                             `).join('')}
@@ -3822,7 +3824,7 @@
                         if (st) k.status = st.value;
                     });
                     const lastK = semData.pesantren[semData.pesantren.length - 1];
-                    if (lastK) child.lastCapaianSummary = `${lastK.kitab} (${lastK.nilai})`;
+                    if (lastK) child.lastCapaianSummary = `lastK.kitab({lastK.nilai})`;
                     renderChildCapaian(child);
                     syncDashboardRekapCards(child);
                     if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
@@ -3841,10 +3843,10 @@
                             ${semData.peminatanDetail.map((pm, idx) => `
                                 <div class="p-2 border rounded-xl bg-slate-50 space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <input type="text" id="inpPemModul_${idx}" class="font-bold text-xs text-slate-800 p-1 border rounded bg-white w-2/3" value="${pm.modul}">
-                                        <input type="text" id="inpPemNilai_${idx}" class="w-20 p-1 border rounded text-xs text-center font-bold bg-white" value="${pm.nilai}">
+                                        <input type="text" id="inpPemModul_idx"class="font-boldtext-xstext-slate-800p-1borderroundedbg-whitew-2/3"value="{pm.modul}">
+                                        <input type="text" id="inpPemNilai_idx"class="w-20p-1borderroundedtext-xstext-centerfont-boldbg-white"value="{pm.nilai}">
                                     </div>
-                                    <input type="text" id="inpPemKet_${idx}" class="w-full p-1.5 border rounded text-xs bg-white" value="${pm.ket}">
+                                    <input type="text" id="inpPemKet_idx"class="w-fullp-1.5borderroundedtext-xsbg-white"value="{pm.ket}">
                                 </div>
                             `).join('')}
                         </div>
@@ -3867,7 +3869,7 @@
                         if (ket) pm.ket = ket.value;
                     });
                     const lastPm = semData.peminatanDetail[semData.peminatanDetail.length - 1];
-                    if (lastPm) child.lastCapaianSummary = `${lastPm.modul} (${lastPm.nilai})`;
+                    if (lastPm) child.lastCapaianSummary = `lastPm.modul({lastPm.nilai})`;
                     renderChildCapaian(child);
                     syncDashboardRekapCards(child);
                     closeModal();
@@ -4003,8 +4005,8 @@
                     showToast("Tahun ajaran wajib diisi!", "error");
                     return;
                 }
-                const newId = `${ta.replace(/[^0-9]/g, '')}-${sem.toLowerCase()}-${Date.now().toString().slice(-3)}`;
-                const newLabel = `Semester ${sem} ${ta} (${isAktif ? 'Aktif' : 'Arsip'})`;
+                const newId = `ta.replace(/[0-9]/g,'')-{sem.toLowerCase()}-${Date.now().toString().slice(-3)}`;
+                const newLabel = `Semester ${sem} ta({isAktif ? 'Aktif' : 'Arsip'})`;
                 AppState.semesters.unshift({ id: newId, label: newLabel, ta, sem, isAktif });
                 AppState.selectedSemesterId = newId;
                 renderChildSemesterSelector();
@@ -4219,7 +4221,7 @@
                 return `
                     <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-emerald-400 transition flex items-center justify-between gap-2.5 shadow-2xs">
                         <div class="flex items-center space-x-2.5 min-w-0">
-                            <img src="${child.foto}" alt="${child.nama}" class="w-11 h-11 rounded-xl object-cover border border-emerald-300 flex-shrink-0">
+                            <img src="child.foto"alt="{child.nama}" class="w-11 h-11 rounded-xl object-cover border border-emerald-300 flex-shrink-0">
                             <div class="min-w-0">
                                 <span class="text-[9px] font-mono font-bold text-slate-500 block">NIS: ${child.nis}</span>
                                 <h4 class="text-xs font-black text-slate-900 truncate">${i + 1}. ${child.nama}</h4>
@@ -4373,7 +4375,7 @@
             if (!inp) return;
             const prefix = roleKey === 'Guru' ? 'guru' : 'eval';
             const randomDigits = Math.floor(100 + Math.random() * 900);
-            inp.value = `${prefix}${randomDigits}`;
+            inp.value = `prefix{randomDigits}`;
         }
 
         // MODAL VERIFIKASI PASSWORD SAAT INGIN MASUK KE MODE GURU/MUSYRIF ATAU MODE EVALUATOR
@@ -4582,7 +4584,7 @@
             const year = yearMatch ? yearMatch[0] : '2026';
             for (const [mKey, mVal] of Object.entries(monthMap)) {
                 if (lower.includes(mKey)) {
-                    return `${year}-${mVal}`;
+                    return `year-{mVal}`;
                 }
             }
             return fallbackYm;
@@ -5060,7 +5062,7 @@
                             <div class="min-w-0 pr-2">
                                 <span class="text-[9px] font-black uppercase text-amber-800 bg-amber-200/80 px-1.5 py-0.2 rounded">${formatYmToLabel(w.ym)} • ${w.status}</span>
                                 <h5 class="text-xs font-black text-slate-900 mt-1">${i + 1}. ${w.pewakaf}</h5>
-                                <p class="text-[10px] text-slate-600">Santri: <strong>${w.santri}</strong> (${w.kelas})</p>
+                                <p class="text-[10px] text-slate-600">Santri: <strong>w.santri</strong>({w.kelas})</p>
                                 <span class="text-[9px] text-slate-500 block">${w.ket}</span>
                             </div>
                             <div class="text-right flex-shrink-0">
@@ -5090,7 +5092,7 @@
                 });
 
                 if (berkasBadge) {
-                    berkasBadge.innerText = `${sudahLengkap.length}/${AppState.children.length} Santri Lengkap`;
+                    berkasBadge.innerText = `sudahLengkap.length/{AppState.children.length} Santri Lengkap`;
                 }
 
                 berkasContainer.innerHTML = `
@@ -5367,9 +5369,9 @@
                                     <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-calendar mr-1"></i>${v.tgl}</span>
                                     <span class="text-[9px] font-black px-2 py-0.5 rounded-full border ${badgeCls}">Pelanggaran ${tk}</span>
                                 </div>
-                                <h5 class="text-xs font-black text-slate-900">${i + 1}. ${v.santri} <span class="text-[10px] font-bold text-emerald-700">(${v.kelas})</span></h5>
+                                <h5 class="text-xs font-black text-slate-900">${i + 1}. v.santri<spanclass="text-[10px]font-boldtext-emerald-700">({v.kelas})</span></h5>
                                 <p class="text-[11px] font-bold text-rose-800">${v.kasus}</p>
-                                <p class="text-[10px] text-slate-600"><strong>Pembinaan:</strong> ${v.sanksi} • <span class="text-emerald-700 font-semibold">${v.tertangani ? 'Tertangani' : 'Belum Tertangani'}</span></p>
+                                <p class="text-[10px] text-slate-600"><strong>Pembinaan:</strong> v.sanksi•<spanclass="text-emerald-700font-semibold">{v.tertangani ? 'Tertangani' : 'Belum Tertangani'}</span></p>
                             </div>
                         `;
                     }).join('');
@@ -5434,9 +5436,9 @@
                 orgGrid.innerHTML = AppState.organisasi.map(o => `
                     <div class="flex-shrink-0 w-36 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-center snap-start relative shadow-xs">
                         <div class="w-14 h-14 mx-auto rounded-xl overflow-hidden border-2 border-emerald-600/30 mb-2 shadow-xs bg-emerald-50">
-                            <img src="${o.foto}" alt="${o.nama}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Guru'">
+                            <img src="o.foto"alt="{o.nama}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Guru'">
                         </div>
-                        <h5 class="font-black text-[11px] text-slate-900 leading-tight truncate" title="${o.nama}">${o.nama}</h5>
+                        <h5 class="font-black text-[11px] text-slate-900 leading-tight truncate" title="o.nama">{o.nama}</h5>
                         <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md inline-block mt-1">${o.jabatan}</span>
                         <p class="text-[9px] text-slate-500 mt-1 line-clamp-1 leading-tight">${o.role}</p>
                         ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
@@ -5518,7 +5520,7 @@
                 beritaEl.innerHTML = AppState.berita.map(b => `
                     <div onclick="openDetailBeritaModal(${b.id})" class="flex-shrink-0 w-60 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 overflow-hidden snap-start shadow-xs flex flex-col relative cursor-pointer card-press transition">
                         <div class="h-28 bg-slate-200 relative overflow-hidden">
-                            <img src="${b.foto}" alt="${b.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200/0B3B2C/FBBF24?text=Berita'">
+                            <img src="b.foto"alt="{b.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200/0B3B2C/FBBF24?text=Berita'">
                             <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">${b.kategori}</span>
                             ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
                                 <button onclick="event.stopPropagation(); deleteBerita(${b.id})" class="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm flex items-center" title="Hapus Berita">
@@ -5620,7 +5622,7 @@
                 return `
                     <div onclick="selectStudent(${realIdx})" class="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-xs hover:border-emerald-500 hover:shadow-md transition card-press cursor-pointer flex items-center space-x-3">
                         <div class="relative flex-shrink-0">
-                            <img src="${child.foto}" alt="${child.nama}" class="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-600/20 shadow-xs" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Santri'">
+                            <img src="child.foto"alt="{child.nama}" class="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-600/20 shadow-xs" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Santri'">
                             <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full ${isUnlocked ? 'bg-emerald-500' : 'bg-amber-500'} text-white flex items-center justify-center text-[8px] border-2 border-white">
                                 <i class="fa-solid ${isUnlocked ? 'fa-unlock' : 'fa-lock'}"></i>
                             </span>
@@ -6720,7 +6722,7 @@
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-3">
                     <div class="h-44 w-full rounded-2xl overflow-hidden bg-slate-200 relative shadow-sm border border-slate-200">
-                        <img src="${item.foto}" alt="${item.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/500x300/0B3B2C/FBBF24?text=Berita+Sekolah'">
+                        <img src="item.foto"alt="{item.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/500x300/0B3B2C/FBBF24?text=Berita+Sekolah'">
                         <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black bg-elwa-dark/90 text-amber-300 backdrop-blur-xs shadow">
                             ${item.kategori}
                         </span>
@@ -6915,12 +6917,12 @@
                     jajanPos.status = selected === "Masih Ada" ? "AMAN" : "HABIS";
                     jajanPos.ket = `Status: ${selected}`;
                 }
-                child.keuangan.lastUpdatedInfo = `Jajan: ${rawNominal} (${selected})`;
+                child.keuangan.lastUpdatedInfo = `Jajan: rawNominal({selected})`;
                 
                 renderChildKeuangan(child);
                 syncDashboardRekapCards(child);
                 closeModal();
-                showToast(`Uang jajan ${rawNominal} (${selected}) berhasil disimpan!`, selected === "Masih Ada" ? "success" : "info");
+                showToast(`Uang jajan rawNominal({selected}) berhasil disimpan!`, selected === "Masih Ada" ? "success" : "info");
             };
             openModal();
         }
@@ -7093,7 +7095,7 @@
                             </div>
                             <div class="p-2 rounded-xl bg-white border border-slate-200">
                                 <span class="text-slate-400 font-bold block">2. Hafalan Al-Qur'an</span>
-                                <strong class="text-emerald-800">${child.hafalan} (${hList.length} Riwayat)</strong>
+                                <strong class="text-emerald-800">child.hafalan({hList.length} Riwayat)</strong>
                             </div>
                             <div class="p-2 rounded-xl bg-white border border-slate-200">
                                 <span class="text-slate-400 font-bold block">3. Capaian (${curSem.sem})</span>
@@ -7172,34 +7174,34 @@
                     `- Lencana Karakter  : ${(child.lencana || []).map(l => l.nama).join(', ') || '-'}`,
                     ``,
                     `B. RINGKASAN REKAP DASHBOARD`,
-                    `- Total Hafalan     : ${child.hafalan} (${child.hafalanRecent})`,
+                    `- Total Hafalan     : child.hafalan({child.hafalanRecent})`,
                     `- Rerata Akademik   : ${child.akademikRerata}`,
                     `- Status Keuangan   : ${k.sppStatus} | Uang Jajan Offline: ${k.statusUangJajan || 'Masih Ada'}`,
                     `- Kedisiplinan      : ${pList.filter(p => !p.tertangani).length > 0 ? 'Perlu Tindak Lanjut' : 'Tertangani & Dibina'}`,
                     ``,
                     `C. CAPAIAN PEMBELAJARAN (${curSem.label})`,
                     `1. Mata Pelajaran Akademik (KBM):`,
-                    ...(semData.akademik.length > 0 ? semData.akademik.map((a, i) => `   ${i + 1}. ${a.mapel} : ${a.akhir} (${a.predikat}) - ${a.capaian}`) : ['   - Belum ada data nilai akademik']),
+                    ...(semData.akademik.length > 0 ? semData.akademik.map((a, i) => `   ${i + 1}. ${a.mapel} : a.akhir({a.predikat}) - ${a.capaian}`) : ['   - Belum ada data nilai akademik']),
                     `2. Materi Kepesantrenan (Kitab & Diniyah):`,
-                    ...(semData.pesantren.length > 0 ? semData.pesantren.map((p, i) => `   ${i + 1}. ${p.kitab} (${p.bidang} - ${p.bab}) : ${p.nilai} [${p.status}]`) : ['   - Belum ada data nilai kepesantrenan']),
+                    ...(semData.pesantren.length > 0 ? semData.pesantren.map((p, i) => `   ${i + 1}. p.kitab({p.bidang} - ${p.bab}) : p.nilai[{p.status}]`) : ['   - Belum ada data nilai kepesantrenan']),
                     `3. Modul & Proyek Peminatan (${child.peminatan}):`,
                     ...(semData.peminatanDetail.length > 0 ? semData.peminatanDetail.map((pm, i) => `   ${i + 1}. ${pm.modul} : ${pm.nilai} - ${pm.ket}`) : ['   - Belum ada data peminatan']),
                     ``,
                     `D. HASIL HAFALAN TAHFIDZ AL-QUR'AN`,
-                    ...(hList.length > 0 ? hList.map((h, i) => `   ${i + 1}. [${h.tgl}] ${h.surat} (Juz ${h.juz} • ${h.ayat}) - Predikat: ${h.predikat} | Penguji: ${h.penguji} | Catatan: "${h.ket}"`) : ['   - Belum ada riwayat hafalan']),
+                    ...(hList.length > 0 ? hList.map((h, i) => `   i+1.[{h.tgl}] ${h.surat} (Juz ${h.juz} • ${h.ayat}) - Predikat: ${h.predikat} | Penguji: h.penguji|Catatan:"{h.ket}"`) : ['   - Belum ada riwayat hafalan']),
                     ``,
                     `E. KEUANGAN & BERKAS FISIK ADMINISTRASI TU`,
                     `- Status Uang Jajan Offline : ${k.statusUangJajan || 'Masih Ada'}`,
                     `1. Rincian Pos Kewajiban:`,
-                    ...(k.pos || []).map((p, i) => `   ${i + 1}. ${p.pos} (${p.nominal} - ${p.ket}) : [${p.status}]`),
+                    ...(k.pos || []).map((p, i) => `   ${i + 1}. p.pos({p.nominal} - p.ket):[{p.status}]`),
                     `2. Status Penyerahan Berkas Fisik di Ruang TU:`,
-                    ...(k.berkas || []).map((b, i) => `   ${i + 1}. ${b.nama} : ${b.verified ? 'SUDAH DITERIMA TU' : 'BELUM DISERAHKAN'} (${b.date})`),
+                    ...(k.berkas || []).map((b, i) => `   ${i + 1}. ${b.nama} : b.verified?'SUDAHDITERIMATU':'BELUMDISERAHKAN'({b.date})`),
                     ``,
                     `F. EVALUASI KEDISIPLINAN & PEMBINAAN ADAB`,
-                    ...(pList.length > 0 ? pList.map((p, i) => `   ${i + 1}. [${p.tgl}] Kategori: Pelanggaran ${p.tingkat || 'Ringan'} | Kasus: ${p.kasus} | Status: ${p.tertangani ? 'Tertangani' : 'Belum Tertangani'} & ${p.dibina ? 'Sudah Dibina' : 'Belum Dibina'} | Tindak Lanjut: ${p.sanksi} (Pembina: ${p.pembina})`) : ['   - Alhamdulillah, nihil catatan pelanggaran.']),
+                    ...(pList.length > 0 ? pList.map((p, i) => `   i+1.[{p.tgl}] Kategori: Pelanggaran ${p.tingkat || 'Ringan'} | Kasus: ${p.kasus} | Status: ${p.tertangani ? 'Tertangani' : 'Belum Tertangani'} & ${p.dibina ? 'Sudah Dibina' : 'Belum Dibina'} | Tindak Lanjut: ${p.sanksi} (Pembina: ${p.pembina})`) : ['   - Alhamdulillah, nihil catatan pelanggaran.']),
                     ``,
                     `G. RIWAYAT CATATAN MUSYRIF & KOMUNIKASI WALI SANTRI`,
-                    ...(cList.length > 0 ? cList.map((c, i) => `   ${i + 1}. [${c.tanggal}] ${c.pengirim}: "${c.isi}"`) : ['   - Belum ada catatan komunikasi']),
+                    ...(cList.length > 0 ? cList.map((c, i) => `   i+1.[{c.tanggal}] c.pengirim:"{c.isi}"`) : ['   - Belum ada catatan komunikasi']),
                     ``,
                     `============================================================`,
                     `Dicetak otomatis melalui Portal Resmi ELWA CONECT`
@@ -7261,7 +7263,7 @@
                 '<div class="sheet">',
                 '<div class="no-print-bar"><button class="btn-print" onclick="window.print()">Cetak / Simpan sebagai PDF</button></div>',
                 '<div class="kop">',
-                `<div><h1>${AppState.profile.nama}</h1><p>NPSN: ${AppState.profile.npsn} • Akreditasi: ${AppState.profile.akreditasi}</p><p>${AppState.profile.alamat}</p></div>`,
+                `<div><h1>${AppState.profile.nama}</h1><p>NPSN: ${AppState.profile.npsn} • Akreditasi: AppState.profile.akreditasi</p><p>{AppState.profile.alamat}</p></div>`,
                 `<div style="text-align:right;"><span class="badge-title">LAPORAN REKAPAN SANTRI</span><p>Tanggal Unduh: <strong>${tglCetak}</strong></p></div>`,
                 '</div>',
                 '<div class="section">',
@@ -7279,53 +7281,53 @@
                 `<div style="margin-top:10px;"><strong style="font-size:11px; color:#475569;">Lencana Prestasi &amp; Karakter: </strong>${(child.lencana || []).map(l => `<span class="tag">${l.nama}</span>`).join('') || '-'}</div>`,
                 '</div>',
                 '<div class="rekap-cards">',
-                `<div class="rekap-card"><span>Hafalan Quran</span><strong>${child.hafalan}</strong><small>${child.hafalanRecent}</small></div>`,
+                `<div class="rekap-card"><span>Hafalan Quran</span><strong>child.hafalan</strong><small>{child.hafalanRecent}</small></div>`,
                 `<div class="rekap-card"><span>Keuangan</span><strong>${k.sppStatus}</strong><small>Jajan: ${k.statusUangJajan || 'Masih Ada'}</small></div>`,
-                `<div class="rekap-card"><span>Rerata Akademik</span><strong>${child.akademikRerata}</strong><small>${curSem.sem} ${curSem.ta}</small></div>`,
-                `<div class="rekap-card"><span>Kedisiplinan</span><strong>${pList.filter(p => !p.tertangani).length > 0 ? 'Perlu Tindak' : 'Tertangani'}</strong><small>${pList.length} Catatan</small></div>`,
+                `<div class="rekap-card"><span>Rerata Akademik</span><strong>child.akademikRerata</strong><small>{curSem.sem} ${curSem.ta}</small></div>`,
+                `<div class="rekap-card"><span>Kedisiplinan</span><strong>pList.filter(p=>!p.tertangani).length>0?'PerluTindak':'Tertangani'</strong><small>{pList.length} Catatan</small></div>`,
                 '</div>',
                 '<div class="section">',
                 `<h3>2. Capaian Pembelajaran (${curSem.label})</h3>`,
                 '<strong>A. Mata Pelajaran Akademik (KBM)</strong>',
                 '<table><thead><tr><th>No</th><th>Mata Pelajaran</th><th>Nilai Akhir</th><th>Predikat</th><th>Deskripsi Capaian</th></tr></thead><tbody>',
-                semData.akademik.length > 0 ? semData.akademik.map((a, i) => `<tr><td>${i + 1}</td><td><strong>${a.mapel}</strong></td><td>${a.akhir}</td><td>${a.predikat}</td><td>${a.capaian}</td></tr>`).join('') : '<tr><td colspan="5">Belum ada data nilai akademik.</td></tr>',
+                semData.akademik.length > 0 ? semData.akademik.map((a, i) => `<tr><td>i+1</td><td><strong>{a.mapel}</strong></td><td>a.akhir</td><td>{a.predikat}</td><td>${a.capaian}</td></tr>`).join('') : '<tr><td colspan="5">Belum ada data nilai akademik.</td></tr>',
                 '</tbody></table>',
                 '<strong style="display:block; margin-top:12px;">B. Materi Kepesantrenan (Kitab &amp; Diniyah)</strong>',
                 '<table><thead><tr><th>No</th><th>Nama Kitab / Materi</th><th>Bidang &amp; Bab</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>',
-                semData.pesantren.length > 0 ? semData.pesantren.map((p, i) => `<tr><td>${i + 1}</td><td><strong>${p.kitab}</strong></td><td>${p.bidang} • ${p.bab}</td><td>${p.nilai}</td><td>${p.status}</td></tr>`).join('') : '<tr><td colspan="5">Belum ada data nilai kepesantrenan.</td></tr>',
+                semData.pesantren.length > 0 ? semData.pesantren.map((p, i) => `<tr><td>i+1</td><td><strong>{p.kitab}</strong></td><td>${p.bidang} • p.bab</td><td>{p.nilai}</td><td>${p.status}</td></tr>`).join('') : '<tr><td colspan="5">Belum ada data nilai kepesantrenan.</td></tr>',
                 '</tbody></table>',
                 `<strong style="display:block; margin-top:12px;">C. Modul &amp; Proyek Peminatan (${child.peminatan})</strong>`,
                 '<table><thead><tr><th>No</th><th>Modul / Proyek Peminatan</th><th>Nilai / Capaian</th><th>Keterangan Evaluasi</th></tr></thead><tbody>',
-                semData.peminatanDetail.length > 0 ? semData.peminatanDetail.map((pm, i) => `<tr><td>${i + 1}</td><td><strong>${pm.modul}</strong></td><td>${pm.nilai}</td><td>${pm.ket}</td></tr>`).join('') : '<tr><td colspan="4">Belum ada data modul peminatan.</td></tr>',
+                semData.peminatanDetail.length > 0 ? semData.peminatanDetail.map((pm, i) => `<tr><td>i+1</td><td><strong>{pm.modul}</strong></td><td>pm.nilai</td><td>{pm.ket}</td></tr>`).join('') : '<tr><td colspan="4">Belum ada data modul peminatan.</td></tr>',
                 '</tbody></table>',
                 '</div>',
                 '<div class="section">',
                 '<h3>3. Hasil Hafalan Tahfidz Al-Qur\'an</h3>',
                 '<table><thead><tr><th>No</th><th>Tanggal</th><th>Surat &amp; Ayat</th><th>Juz</th><th>Predikat</th><th>Penguji</th><th>Catatan Evaluasi</th></tr></thead><tbody>',
-                hList.length > 0 ? hList.map((h, i) => `<tr><td>${i + 1}</td><td>${h.tgl}</td><td><strong>${h.surat}</strong><br><small>${h.ayat}</small></td><td>Juz ${h.juz}</td><td>${h.predikat}</td><td>${h.penguji}</td><td>${h.ket}</td></tr>`).join('') : '<tr><td colspan="7">Belum ada riwayat setoran hafalan.</td></tr>',
+                hList.length > 0 ? hList.map((h, i) => `<tr><td>i+1</td><td>{h.tgl}</td><td><strong>h.surat</strong><br><small>{h.ayat}</small></td><td>Juz h.juz</td><td>{h.predikat}</td><td>h.penguji</td><td>{h.ket}</td></tr>`).join('') : '<tr><td colspan="7">Belum ada riwayat setoran hafalan.</td></tr>',
                 '</tbody></table>',
                 '</div>',
                 '<div class="section">',
                 '<h3>4. Keuangan &amp; Berkas Fisik Administrasi (TU)</h3>',
                 `<p style="margin:0 0 6px;">Status Uang Jajan Santri (Offline): <strong>${k.statusUangJajan || 'Masih Ada'}</strong></p>`,
                 '<table><thead><tr><th>No</th><th>Pos Tagihan &amp; Kewajiban</th><th>Nominal</th><th>Keterangan</th><th>Status</th></tr></thead><tbody>',
-                (k.pos || []).map((p, i) => `<tr><td>${i + 1}</td><td><strong>${p.pos}</strong></td><td>${p.nominal}</td><td>${p.ket}</td><td><strong>${p.status}</strong></td></tr>`).join(''),
+                (k.pos || []).map((p, i) => `<tr><td>i+1</td><td><strong>{p.pos}</strong></td><td>p.nominal</td><td>{p.ket}</td><td><strong>${p.status}</strong></td></tr>`).join(''),
                 '</tbody></table>',
                 '<strong style="display:block; margin-top:12px;">Status Penyerahan Berkas Fisik ke Ruang Tata Usaha (TU)</strong>',
                 '<table><thead><tr><th>No</th><th>Nama Dokumen Persyaratan</th><th>Status Verifikasi Fisik</th><th>Keterangan</th></tr></thead><tbody>',
-                (k.berkas || []).map((b, i) => `<tr><td>${i + 1}</td><td>${b.nama}</td><td><strong>${b.verified ? 'Diterima TU' : 'Belum Diterima'}</strong></td><td>${b.date}</td></tr>`).join(''),
+                (k.berkas || []).map((b, i) => `<tr><td>i+1</td><td>{b.nama}</td><td><strong>b.verified?'DiterimaTU':'BelumDiterima'</strong></td><td>{b.date}</td></tr>`).join(''),
                 '</tbody></table>',
                 '</div>',
                 '<div class="section">',
                 '<h3>5. Evaluasi Kedisiplinan &amp; Pembinaan Adab</h3>',
                 '<table><thead><tr><th>No</th><th>Tanggal</th><th>Kategori</th><th>Kasus / Catatan</th><th>Tindak Lanjut &amp; Sanksi Edukatif</th><th>Status &amp; Pembina</th></tr></thead><tbody>',
-                pList.length > 0 ? pList.map((p, i) => `<tr><td>${i + 1}</td><td>${p.tgl}</td><td><strong>Pelanggaran ${p.tingkat || 'Ringan'}</strong></td><td>${p.kasus}</td><td>${p.sanksi}</td><td>${p.tertangani ? 'Tertangani' : 'Belum Tertangani'} • ${p.dibina ? 'Sudah Dibina' : 'Belum Dibina'}<br><small>${p.pembina}</small></td></tr>`).join('') : '<tr><td colspan="6">Alhamdulillah, nihil catatan pelanggaran (Tidak ada pelanggaran Ringan, Sedang, maupun Berat).</td></tr>',
+                pList.length > 0 ? pList.map((p, i) => `<tr><td>i+1</td><td>{p.tgl}</td><td><strong>Pelanggaran p.tingkat||'Ringan'</strong></td><td>{p.kasus}</td><td>p.sanksi</td><td>{p.tertangani ? 'Tertangani' : 'Belum Tertangani'} • p.dibina?'SudahDibina':'BelumDibina'<br><small>{p.pembina}</small></td></tr>`).join('') : '<tr><td colspan="6">Alhamdulillah, nihil catatan pelanggaran (Tidak ada pelanggaran Ringan, Sedang, maupun Berat).</td></tr>',
                 '</tbody></table>',
                 '</div>',
                 '<div class="section">',
                 '<h3>6. Riwayat Catatan Musyrif &amp; Komunikasi Wali Santri</h3>',
                 '<table><thead><tr><th>No</th><th>Tanggal</th><th>Pengirim</th><th>Isi Catatan / Pesan</th></tr></thead><tbody>',
-                cList.length > 0 ? cList.map((c, i) => `<tr><td>${i + 1}</td><td>${c.tanggal}</td><td><strong>${c.pengirim}</strong></td><td>"${c.isi}"</td></tr>`).join('') : '<tr><td colspan="4">Belum ada riwayat catatan.</td></tr>',
+                cList.length > 0 ? cList.map((c, i) => `<tr><td>i+1</td><td>{c.tanggal}</td><td><strong>c.pengirim</strong></td><td>"{c.isi}"</td></tr>`).join('') : '<tr><td colspan="4">Belum ada riwayat catatan.</td></tr>',
                 '</tbody></table>',
                 '</div>',
                 '</div>',
@@ -7406,7 +7408,7 @@
             // Tambahkan ke riwayat catatan
             child.catatanList.unshift({
                 id: Date.now(),
-                pengirim: `${senderName} (${roleLabel})`,
+                pengirim: `senderName({roleLabel})`,
                 peran: roleLabel,
                 tanggal: "Baru Saja",
                 isi: noteContent,
@@ -7416,7 +7418,7 @@
             // Aktifkan banner notifikasi catatan baru untuk orang tua pada santri tersebut
             child.notifikasi = {
                 adaBaru: true,
-                pengirim: `${senderName} (${roleLabel})`,
+                pengirim: `senderName({roleLabel})`,
                 pesan: noteContent
             };
 
@@ -7496,9 +7498,353 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
-        window.onload = function() {
+        /* ===================================================
+           SUPABASE CLOUD DATABASE INTEGRATION MODULE
+           Siap disambungkan ke proyek Supabase Anda kapan saja
+           (Mendukung Pemisahan Tabel Password Mode Admin, Guru/Musyrif, & Evaluator)
+           ===================================================
+           CARA MENYAMBUNGKAN KE SUPABASE:
+           1. Buat project baru di https://supabase.com
+           2. Jalankan file SQL `supabase_schema_elwa_conect.sql` di SQL Editor Supabase.
+           3. Isi SUPABASE_URL dan SUPABASE_ANON_KEY di bawah ini dengan
+              Project URL dan Anon Public Key dari menu Project Settings > API.
+        =================================================== */
+        const SUPABASE_CONFIG = {
+            url: "https://qurybsfqzisuacoiakiw.supabase.co",      // Contoh: "https://xyzcompany.supabase.co"
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cnlic2ZxemlzdWFjb2lha2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5OTM0OTksImV4cCI6MjEwODU2OTQ5OX0.Y-DlJI0faSCl1Gnn7oTqrcN_tzEZDSXVQWUn07i_S5Y",  // Contoh: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            tableName: "elwa_app_state",
+            recordId: "main_school_data",
+            // Tabel terpisah khusus untuk masing-masing password mode akses
+            authAdminTable: "elwa_auth_mode_admin",
+            authGuruTable: "elwa_auth_mode_guru",
+            authEvaluatorTable: "elwa_auth_mode_evaluator",
+            roleCredentialsTable: "elwa_role_credentials",
+            enableRealtime: true
+        };
+
+        const SupabaseService = {
+            client: null,
+            isConnected: false,
+            isSyncing: false,
+            // Data konten aplikasi disimpan terpisah dari password mode
+            PERSISTED_KEYS: [
+                'profile',
+                'visiMisi',
+                'organisasi',
+                'akademik',
+                'sarpras',
+                'berita',
+                'agenda',
+                'kontak',
+                'semesters',
+                'children'
+            ],
+
+            extractPayload() {
+                const payload = {};
+                this.PERSISTED_KEYS.forEach(k => {
+                    if (AppState[k] !== undefined) {
+                        payload[k] = AppState[k];
+                    }
+                });
+                return payload;
+            },
+
+            extractRolePasswordsPayload() {
+                return {
+                    adminPassword: AppState.adminPassword || 'adminpintar',
+                    guruPassword: (AppState.rolePasswords && AppState.rolePasswords['Guru']) || 'guru123',
+                    evaluatorPassword: (AppState.rolePasswords && AppState.rolePasswords['Evaluator']) || 'eval123'
+                };
+            },
+
+            applyPayload(data) {
+                if (!data || typeof data !== 'object') return;
+                this.PERSISTED_KEYS.forEach(k => {
+                    if (data[k] !== undefined) {
+                        AppState[k] = data[k];
+                    }
+                });
+            },
+
+            saveLocalBackup() {
+                try {
+                    localStorage.setItem('elwa_conect_state_backup', JSON.stringify(this.extractPayload()));
+                    // Simpan data password mode secara terpisah di localStorage juga
+                    localStorage.setItem('elwa_conect_auth_roles_backup', JSON.stringify(this.extractRolePasswordsPayload()));
+                } catch (e) {
+                    // Fallback jika storage diblokir oleh browser/iframe
+                }
+            },
+
+            loadLocalBackup() {
+                try {
+                    const rawState = localStorage.getItem('elwa_conect_state_backup');
+                    if (rawState) {
+                        this.applyPayload(JSON.parse(rawState));
+                    }
+                    const rawRoles = localStorage.getItem('elwa_conect_auth_roles_backup');
+                    if (rawRoles) {
+                        const parsedRoles = JSON.parse(rawRoles);
+                        if (parsedRoles.adminPassword) AppState.adminPassword = parsedRoles.adminPassword;
+                        if (!AppState.rolePasswords) AppState.rolePasswords = {};
+                        if (parsedRoles.guruPassword) AppState.rolePasswords['Guru'] = parsedRoles.guruPassword;
+                        if (parsedRoles.evaluatorPassword) AppState.rolePasswords['Evaluator'] = parsedRoles.evaluatorPassword;
+                    }
+                    return true;
+                } catch (e) {
+                    // Abaikan jika gagal membaca localStorage
+                }
+                return false;
+            },
+
+            async init() {
+                // Muat cadangan lokal terlebih dahulu bila tersedia
+                this.loadLocalBackup();
+
+                // Cek apakah kredensial Supabase sudah diisi
+                const hasConfig = Boolean(
+                    SUPABASE_CONFIG.url &&
+                    SUPABASE_CONFIG.anonKey &&
+                    SUPABASE_CONFIG.url.startsWith('http') &&
+                    window.supabase &&
+                    typeof window.supabase.createClient === 'function'
+                );
+
+                if (!hasConfig) {
+                    return false;
+                }
+
+                try {
+                    this.client = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                    await this.fetchRolePasswordsFromCloud();
+                    const loaded = await this.fetchFromCloud();
+                    this.isConnected = true;
+
+                    // Jika tabel di Supabase masih kosong, unggah data awal (seed) otomatis
+                    if (!loaded) {
+                        await this.syncToCloud(true);
+                    }
+
+                    if (SUPABASE_CONFIG.enableRealtime) {
+                        this.subscribeRealtime();
+                    }
+                    return true;
+                } catch (err) {
+                    console.warn("Supabase belum terhubung, berjalan menggunakan mode lokal:", err);
+                    this.isConnected = false;
+                    return false;
+                }
+            },
+
+            // Mengambil Password Mode Admin, Mode Guru/Musyrif, dan Mode Evaluator dari tabel terpisah
+            async fetchRolePasswordsFromCloud() {
+                if (!this.client) return false;
+                try {
+                    const [resAdmin, resGuru, resEval] = await Promise.all([
+                        this.client.from(SUPABASE_CONFIG.authAdminTable).select('password_plain').eq('id', 'admin_main').maybeSingle(),
+                        this.client.from(SUPABASE_CONFIG.authGuruTable).select('password_plain').eq('id', 'guru_main').maybeSingle(),
+                        this.client.from(SUPABASE_CONFIG.authEvaluatorTable).select('password_plain').eq('id', 'evaluator_main').maybeSingle()
+                    ]);
+
+                    if (!AppState.rolePasswords) AppState.rolePasswords = {};
+                    if (resAdmin.data && resAdmin.data.password_plain) {
+                        AppState.adminPassword = resAdmin.data.password_plain;
+                    }
+                    if (resGuru.data && resGuru.data.password_plain) {
+                        AppState.rolePasswords['Guru'] = resGuru.data.password_plain;
+                    }
+                    if (resEval.data && resEval.data.password_plain) {
+                        AppState.rolePasswords['Evaluator'] = resEval.data.password_plain;
+                    }
+                    this.saveLocalBackup();
+                    renderDashboard();
+                    return true;
+                } catch (err) {
+                    console.warn("Gagal mengambil tabel password terpisah dari Supabase:", err);
+                    return false;
+                }
+            },
+
+            // Menyimpan perubahan Password Mode Admin, Mode Guru/Musyrif, & Mode Evaluator ke tabel masing-masing
+            async syncRolePasswordsToCloud() {
+                if (!this.client) return false;
+                try {
+                    const nowIso = new Date().toISOString();
+                    const roles = this.extractRolePasswordsPayload();
+
+                    await Promise.all([
+                        this.client.from(SUPABASE_CONFIG.authAdminTable).upsert({
+                            id: 'admin_main',
+                            role_code: 'Super Admin',
+                            role_label: 'Mode Admin Utama',
+                            password_plain: roles.adminPassword,
+                            updated_at: nowIso
+                        }, { onConflict: 'id' }),
+                        this.client.from(SUPABASE_CONFIG.authGuruTable).upsert({
+                            id: 'guru_main',
+                            role_code: 'Guru',
+                            role_label: 'Mode Guru / Musyrif',
+                            password_plain: roles.guruPassword,
+                            updated_at: nowIso
+                        }, { onConflict: 'id' }),
+                        this.client.from(SUPABASE_CONFIG.authEvaluatorTable).upsert({
+                            id: 'evaluator_main',
+                            role_code: 'Evaluator',
+                            role_label: 'Mode Evaluator',
+                            password_plain: roles.evaluatorPassword,
+                            updated_at: nowIso
+                        }, { onConflict: 'id' }),
+                        this.client.from(SUPABASE_CONFIG.roleCredentialsTable).upsert([
+                            { role_key: 'Super Admin', role_display_name: 'Mode Admin Utama', password_value: roles.adminPassword, updated_at: nowIso },
+                            { role_key: 'Guru', role_display_name: 'Mode Guru / Musyrif', password_value: roles.guruPassword, updated_at: nowIso },
+                            { role_key: 'Evaluator', role_display_name: 'Mode Evaluator', password_value: roles.evaluatorPassword, updated_at: nowIso }
+                        ], { onConflict: 'role_key' })
+                    ]);
+                    return true;
+                } catch (err) {
+                    console.warn("Gagal menyinkronkan tabel password mode:", err);
+                    return false;
+                }
+            },
+
+            async fetchFromCloud() {
+                if (!this.client) return false;
+                const { data, error } = await this.client
+                    .from(SUPABASE_CONFIG.tableName)
+                    .select('state_data, updated_at')
+                    .eq('id', SUPABASE_CONFIG.recordId)
+                    .maybeSingle();
+
+                if (error) {
+                    console.warn("Gagal mengambil data dari Supabase:", error.message);
+                    return false;
+                }
+
+                if (data && data.state_data) {
+                    this.applyPayload(data.state_data);
+                    this.saveLocalBackup();
+                    renderDashboard();
+                    return true;
+                }
+                return false;
+            },
+
+            async syncToCloud(silent = false) {
+                this.saveLocalBackup();
+                if (!this.client || this.isSyncing) return false;
+
+                try {
+                    this.isSyncing = true;
+                    const payload = this.extractPayload();
+
+                    // Sinkronkan paralel: tabel data utama + tabel terpisah untuk password mode
+                    const [{ error }] = await Promise.all([
+                        this.client
+                            .from(SUPABASE_CONFIG.tableName)
+                            .upsert({
+                                id: SUPABASE_CONFIG.recordId,
+                                state_data: payload,
+                                updated_at: new Date().toISOString()
+                            }, { onConflict: 'id' }),
+                        this.syncRolePasswordsToCloud()
+                    ]);
+
+                    this.isSyncing = false;
+                    if (error) {
+                        console.warn("Gagal menyinkronkan ke Supabase:", error.message);
+                        return false;
+                    }
+                    return true;
+                } catch (err) {
+                    this.isSyncing = false;
+                    console.warn("Error sinkronisasi Supabase:", err);
+                    return false;
+                }
+            },
+
+            subscribeRealtime() {
+                if (!this.client) return;
+                this.client
+                    .channel('elwa_realtime_sync')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: SUPABASE_CONFIG.tableName,
+                            filter: `id=eq.${SUPABASE_CONFIG.recordId}`
+                        },
+                        (payload) => {
+                            if (!this.isSyncing && payload.new && payload.new.state_data) {
+                                this.applyPayload(payload.new.state_data);
+                                this.saveLocalBackup();
+                                renderDashboard();
+                            }
+                        }
+                    )
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: SUPABASE_CONFIG.authAdminTable },
+                        () => { if (!this.isSyncing) this.fetchRolePasswordsFromCloud(); }
+                    )
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: SUPABASE_CONFIG.authGuruTable },
+                        () => { if (!this.isSyncing) this.fetchRolePasswordsFromCloud(); }
+                    )
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: SUPABASE_CONFIG.authEvaluatorTable },
+                        () => { if (!this.isSyncing) this.fetchRolePasswordsFromCloud(); }
+                    )
+                    .subscribe();
+            }
+        };
+
+        // Bungkus (hook) fungsi mutasi data secara otomatis agar setiap perubahan langsung tersimpan ke Supabase & LocalStorage
+        (function attachSupabaseAutoSync() {
+            const mutatingFunctions = [
+                'saveModalData',
+                'changePelanggaranTingkat',
+                'togglePelanggaranStatus',
+                'deletePelanggaran',
+                'deleteHafalanItem',
+                'deleteOrgMember',
+                'deleteEkskulItem',
+                'deletePrestasiItem',
+                'deleteSarprasItem',
+                'deleteBerita',
+                'deleteAgenda',
+                'submitParentReply',
+                'submitMusyrifNoteToParent',
+                'markNotificationRead',
+                'dismissNotification',
+                'addNewLencanaItem',
+                'removeLencanaItem',
+                'addNewBerkasRequirement',
+                'addNewMapelToSemester',
+                'addNewKitabToSemester',
+                'addNewPeminatanToSemester'
+            ];
+
+            mutatingFunctions.forEach(fnName => {
+                const originalFn = window[fnName];
+                if (typeof originalFn === 'function') {
+                    window[fnName] = function(...args) {
+                        const result = originalFn.apply(this, args);
+                        SupabaseService.syncToCloud(true);
+                        return result;
+                    };
+                }
+            });
+        })();
+
+        window.onload = async function() {
             renderDashboard();
+            await SupabaseService.init();
         };
     </script>
 </body>
 </html>
+
