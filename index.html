@@ -7498,18 +7498,16 @@
         }
 
         /* ===================================================================
-           INTEGRASI DATABASE SUPABASE (AUTO-SYNC, SEEDING & REALTIME)
+           INTEGRASI DATABASE SUPABASE (MULTI-DEVICE REALTIME & AUTO-SYNC)
            ===================================================================
            PANDUAN SETUP SQL DI SUPABASE (Jalankan di menu SQL Editor Supabase):
 
-           -- 1. Tabel Utama Penyimpanan State & Konfigurasi Aplikasi
            CREATE TABLE IF NOT EXISTS public.elwa_app_database (
                id TEXT PRIMARY KEY,
-               payload JSONB NOT NULL,
-               updated_at TIMESTAMPTZ DEFAULT NOW()
+               payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+               updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
            );
 
-           -- 2. Tabel Terstruktur Data Santri (Sinkron Otomatis)
            CREATE TABLE IF NOT EXISTS public.elwa_students (
                nis TEXT PRIMARY KEY,
                nama TEXT NOT NULL,
@@ -7517,25 +7515,25 @@
                marhalah TEXT,
                asrama TEXT,
                password TEXT,
-               data JSONB NOT NULL,
-               updated_at TIMESTAMPTZ DEFAULT NOW()
+               data JSONB NOT NULL DEFAULT '{}'::jsonb,
+               updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
            );
 
-           -- 3. Aktifkan Row Level Security (RLS) & Policy Akses Aplikasi
            ALTER TABLE public.elwa_app_database ENABLE ROW LEVEL SECURITY;
            ALTER TABLE public.elwa_students ENABLE ROW LEVEL SECURITY;
 
+           DROP POLICY IF EXISTS "Allow public read write elwa_app_database" ON public.elwa_app_database;
            CREATE POLICY "Allow public read write elwa_app_database"
-               ON public.elwa_app_database FOR ALL
+               ON public.elwa_app_database FOR ALL TO anon, authenticated
                USING (true) WITH CHECK (true);
 
+           DROP POLICY IF EXISTS "Allow public read write elwa_students" ON public.elwa_students;
            CREATE POLICY "Allow public read write elwa_students"
-               ON public.elwa_students FOR ALL
+               ON public.elwa_students FOR ALL TO anon, authenticated
                USING (true) WITH CHECK (true);
 
-           -- 4. (Opsional) Aktifkan Realtime untuk sinkronisasi antar perangkat
-           ALTER PUBLICATION supabase_realtime ADD TABLE public.elwa_app_database;
-           ALTER PUBLICATION supabase_realtime ADD TABLE public.elwa_students;
+           GRANT ALL ON TABLE public.elwa_app_database TO anon, authenticated, service_role;
+           GRANT ALL ON TABLE public.elwa_students TO anon, authenticated, service_role;
            =================================================================== */
 
         const SUPABASE_CONFIG = {
@@ -7545,15 +7543,68 @@
             mainTable: "elwa_app_database",
             studentTable: "elwa_students",
             recordId: "elwa_conect_main_v1",
-            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V1"
+            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V2"
         };
+
+        // Kompresi otomatis saat memilih foto dari galeri HP agar ukuran base64 ringan (<100KB)
+        // sehingga cepat tersimpan ke Supabase dan langsung tampil di semua perangkat
+        (function enableAutoImageCompression() {
+            const origReadAsDataURL = FileReader.prototype.readAsDataURL;
+            FileReader.prototype.readAsDataURL = function(blob) {
+                if (blob && blob.type && blob.type.startsWith("image/") && blob.type !== "image/svg+xml" && blob.size > 60000) {
+                    const readerInstance = this;
+                    const img = new Image();
+                    const objUrl = URL.createObjectURL(blob);
+                    img.onload = function() {
+                        URL.revokeObjectURL(objUrl);
+                        try {
+                            const maxDim = 800;
+                            let w = img.width || 600;
+                            let h = img.height || 600;
+                            if (w > maxDim || h > maxDim) {
+                                if (w > h) {
+                                    h = Math.round((h * maxDim) / w);
+                                    w = maxDim;
+                                } else {
+                                    w = Math.round((w * maxDim) / h);
+                                    h = maxDim;
+                                }
+                            }
+                            const canvas = document.createElement("canvas");
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.80);
+                            if (typeof readerInstance.onload === "function") {
+                                readerInstance.onload({ target: { result: compressedDataUrl } });
+                            }
+                        } catch (err) {
+                            origReadAsDataURL.call(readerInstance, blob);
+                        }
+                    };
+                    img.onerror = function() {
+                        URL.revokeObjectURL(objUrl);
+                        origReadAsDataURL.call(readerInstance, blob);
+                    };
+                    img.src = objUrl;
+                    return;
+                }
+                return origReadAsDataURL.call(this, blob);
+            };
+        })();
 
         const ElwaSupabaseDB = {
             client: null,
             isConfigured: false,
-            isSyncing: false,
+            isReady: false,        // Mencegah perangkat baru menimpa data Supabase sebelum fetch selesai
+            isFetching: false,     // Penanda sedang menarik data dari Supabase
+            isSyncing: false,      // Penanda sedang mengirim data ke Supabase
+            pendingSync: false,    // Antrean jika ada perubahan saat proses sync masih berjalan
             lastSyncedHash: "",
+            lastRemoteUpdatedAt: null,
             syncTimer: null,
+            pollInterval: null,
             persistentKeys: [
                 "adminPassword",
                 "rolePasswords",
@@ -7580,7 +7631,7 @@
                 return snap;
             },
 
-            // Terapkan data dari database ke AppState tanpa merusak referensi objek
+            // Terapkan data dari Supabase ke AppState
             applySnapshot(data) {
                 if (!data || typeof data !== "object") return;
                 this.persistentKeys.forEach(k => {
@@ -7590,13 +7641,11 @@
                 });
             },
 
-            // Simpan cadangan lokal (offline fallback)
+            // Simpan cadangan lokal (hanya untuk fallback jika offline)
             saveLocalBackup(snapshot) {
                 try {
                     localStorage.setItem(SUPABASE_CONFIG.localCacheKey, JSON.stringify(snapshot));
-                } catch (err) {
-                    // Abaikan jika storage penuh / diblokir sandbox
-                }
+                } catch (err) {}
             },
 
             // Muat cadangan lokal
@@ -7608,27 +7657,25 @@
                         this.applySnapshot(parsed);
                         return true;
                     }
-                } catch (err) {
-                    // Abaikan jika akses localStorage dibatasi
-                }
+                } catch (err) {}
                 return false;
             },
 
             // Cek apakah URL & Anon Key Supabase sudah diisi dengan kredensial asli
             checkCredentials() {
-                let url = SUPABASE_CONFIG.url;
-                let key = SUPABASE_CONFIG.anonKey;
+                let url = (SUPABASE_CONFIG.url || "").trim();
+                let key = (SUPABASE_CONFIG.anonKey || "").trim();
                 try {
                     const savedUrl = localStorage.getItem("ELWA_SUPABASE_URL");
                     const savedKey = localStorage.getItem("ELWA_SUPABASE_ANON_KEY");
-                    if (savedUrl && savedKey) {
-                        url = savedUrl;
-                        key = savedKey;
+                    if ((!url || url.includes("YOUR_PROJECT_ID")) && savedUrl && savedKey) {
+                        url = savedUrl.trim();
+                        key = savedKey.trim();
                     }
                 } catch (e) {}
 
-                const validUrl = url && url.startsWith("https://") && !url.includes("YOUR_PROJECT_ID");
-                const validKey = key && key.length > 20 && !key.includes("YOUR_SUPABASE_ANON_KEY");
+                const validUrl = url.startsWith("https://") && !url.includes("YOUR_PROJECT_ID");
+                const validKey = key.length > 20 && !key.includes("YOUR_SUPABASE_ANON_KEY");
                 return { valid: Boolean(validUrl && validKey), url, key };
             },
 
@@ -7645,14 +7692,20 @@
 
             // Inisialisasi Koneksi Supabase & Muat Data Awal
             async init() {
-                // 1. Muat cache lokal terlebih dahulu agar tampilan langsung siap
-                this.loadLocalBackup();
+                this.isReady = false;
+                this.lastSyncedHash = JSON.stringify(this.getSnapshot());
+
+                // Render awal sambil menunggu jaringan
                 renderDashboard();
 
                 const creds = this.checkCredentials();
                 if (!creds.valid || typeof window.supabase === "undefined") {
+                    // Jika belum dikonfigurasi ke Supabase, gunakan penyimpanan lokal
                     this.isConfigured = false;
+                    this.loadLocalBackup();
                     this.lastSyncedHash = JSON.stringify(this.getSnapshot());
+                    this.isReady = true;
+                    renderDashboard();
                     return false;
                 }
 
@@ -7662,20 +7715,32 @@
                     });
                     this.isConfigured = true;
 
-                    await this.fetchFromSupabase();
+                    // Ambil data terbaru dari server Supabase terlebih dahulu (Single Source of Truth)
+                    await this.fetchFromSupabase(true);
+
+                    // Tandai siap menerima perubahan setelah data server berhasil dimuat
+                    this.isReady = true;
+
+                    // Aktifkan Realtime + Polling Berkala Lintas Perangkat
                     this.subscribeRealtime();
+                    this.startCrossDevicePolling();
                     return true;
                 } catch (err) {
                     console.warn("[ELWA Supabase] Gagal inisialisasi koneksi:", err);
                     this.isConfigured = false;
+                    this.loadLocalBackup();
+                    this.lastSyncedHash = JSON.stringify(this.getSnapshot());
+                    this.isReady = true;
+                    renderDashboard();
                     return false;
                 }
             },
 
             // Ambil data dari Supabase (atau seed otomatis jika tabel masih kosong)
-            async fetchFromSupabase() {
-                if (!this.client || !this.isConfigured) return;
+            async fetchFromSupabase(isInitialLoad = false) {
+                if (!this.client || !this.isConfigured || this.isSyncing) return;
 
+                this.isFetching = true;
                 try {
                     const { data, error } = await this.client
                         .from(SUPABASE_CONFIG.mainTable)
@@ -7684,26 +7749,62 @@
                         .maybeSingle();
 
                     if (error) {
-                        console.warn("[ELWA Supabase] Error saat mengambil data:", error.message);
+                        console.error("[ELWA Supabase] Error saat mengambil data:", error.message);
+                        if (isInitialLoad) {
+                            this.loadLocalBackup();
+                            this.lastSyncedHash = JSON.stringify(this.getSnapshot());
+                            renderDashboard();
+                        }
                         return;
                     }
 
-                    if (data && data.payload) {
-                        this.applySnapshot(data.payload);
-                        this.saveLocalBackup(data.payload);
-                        this.lastSyncedHash = JSON.stringify(this.getSnapshot());
-                        renderDashboard();
-                    } else {
-                        // Jika belum ada data di Supabase, simpan data awal AppState ke Supabase (Auto-Seed)
+                    if (data && data.payload && Object.keys(data.payload).length > 0) {
+                        const incomingHash = JSON.stringify(data.payload);
+                        this.lastRemoteUpdatedAt = data.updated_at || null;
+                        if (isInitialLoad || incomingHash !== this.lastSyncedHash) {
+                            this.lastSyncedHash = incomingHash;
+                            this.applySnapshot(data.payload);
+                            this.saveLocalBackup(data.payload);
+                            renderDashboard();
+                        }
+                    } else if (isInitialLoad) {
+                        // Tabel di Supabase masih kosong: unggah data awal ke Supabase (Auto-Seed)
+                        this.isReady = true;
                         await this.syncToSupabase(true);
                     }
                 } catch (err) {
                     console.warn("[ELWA Supabase] Exception saat fetch data:", err);
+                } finally {
+                    this.isFetching = false;
                 }
+            },
+
+            // Cek secara ringan apakah ada pembaruan dari perangkat lain berdasarkan updated_at
+            async checkRemoteUpdate() {
+                if (!this.client || !this.isConfigured || !this.isReady || this.isSyncing || this.isFetching) {
+                    return;
+                }
+                try {
+                    const { data, error } = await this.client
+                        .from(SUPABASE_CONFIG.mainTable)
+                        .select("updated_at")
+                        .eq("id", SUPABASE_CONFIG.recordId)
+                        .maybeSingle();
+
+                    if (!error && data && data.updated_at) {
+                        if (this.lastRemoteUpdatedAt && data.updated_at !== this.lastRemoteUpdatedAt) {
+                            await this.fetchFromSupabase(false);
+                        } else if (!this.lastRemoteUpdatedAt) {
+                            this.lastRemoteUpdatedAt = data.updated_at;
+                        }
+                    }
+                } catch (err) {}
             },
 
             // Simpan seluruh perubahan data AppState & tabel santri ke Supabase
             async syncToSupabase(force = false) {
+                if (!this.isReady || this.isFetching) return;
+
                 const snapshot = this.getSnapshot();
                 const currentHash = JSON.stringify(snapshot);
 
@@ -7711,12 +7812,21 @@
                     return;
                 }
 
-                this.lastSyncedHash = currentHash;
                 this.saveLocalBackup(snapshot);
 
-                if (!this.client || !this.isConfigured || this.isSyncing) return;
+                if (!this.client || !this.isConfigured) {
+                    this.lastSyncedHash = currentHash;
+                    return;
+                }
+
+                if (this.isSyncing) {
+                    this.pendingSync = true;
+                    return;
+                }
 
                 this.isSyncing = true;
+                this.lastSyncedHash = currentHash;
+
                 try {
                     const nowIso = new Date().toISOString();
 
@@ -7733,7 +7843,9 @@
                         );
 
                     if (mainErr) {
-                        console.warn("[ELWA Supabase] Gagal menyimpan ke tabel utama:", mainErr.message);
+                        console.error("[ELWA Supabase] Gagal menyimpan ke tabel utama:", mainErr.message);
+                    } else {
+                        this.lastRemoteUpdatedAt = nowIso;
                     }
 
                     // 2. Upsert data masing-masing santri ke tabel elwa_students
@@ -7757,15 +7869,20 @@
                     console.warn("[ELWA Supabase] Exception saat sinkronisasi:", err);
                 } finally {
                     this.isSyncing = false;
+                    if (this.pendingSync) {
+                        this.pendingSync = false;
+                        this.scheduleSync(150);
+                    }
                 }
             },
 
-            // Jadwalkan sinkronisasi otomatis dengan debounce agar hemat request
-            scheduleSync() {
+            // Jadwalkan sinkronisasi otomatis hanya jika sudah siap dan ada perubahan data nyata
+            scheduleSync(delayMs = 200) {
+                if (!this.isReady || this.isFetching) return;
                 if (this.syncTimer) clearTimeout(this.syncTimer);
                 this.syncTimer = setTimeout(() => {
                     this.syncToSupabase(false);
-                }, 350);
+                }, delayMs);
             },
 
             // Langganan Realtime Supabase agar perubahan dari perangkat lain langsung tampil
@@ -7785,14 +7902,18 @@
                             payload => {
                                 if (this.isSyncing) return;
                                 const newRecord = payload.new;
-                                if (newRecord && newRecord.payload) {
+                                if (newRecord && newRecord.payload && Object.keys(newRecord.payload).length > 0) {
                                     const incomingHash = JSON.stringify(newRecord.payload);
                                     if (incomingHash !== this.lastSyncedHash) {
                                         this.lastSyncedHash = incomingHash;
+                                        this.lastRemoteUpdatedAt = newRecord.updated_at || this.lastRemoteUpdatedAt;
                                         this.applySnapshot(newRecord.payload);
                                         this.saveLocalBackup(newRecord.payload);
                                         renderDashboard();
                                     }
+                                } else {
+                                    // Jika payload berukuran besar dan dipotong oleh WAL Realtime, tarik langsung via select
+                                    this.fetchFromSupabase(false);
                                 }
                             }
                         )
@@ -7800,31 +7921,65 @@
                 } catch (err) {
                     console.warn("[ELWA Supabase] Realtime subscription dilewati:", err);
                 }
+            },
+
+            // Polling ringan & listener fokus tab agar semua perangkat dijamin 100% sinkron
+            startCrossDevicePolling() {
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                this.pollInterval = setInterval(() => {
+                    // 1. Cek apakah ada perubahan lokal yang belum tersinkronisasi
+                    if (this.isReady && !this.isFetching && !this.isSyncing) {
+                        const currentHash = JSON.stringify(this.getSnapshot());
+                        if (currentHash !== this.lastSyncedHash) {
+                            this.syncToSupabase(false);
+                            return;
+                        }
+                    }
+                    // 2. Cek apakah perangkat lain baru saja memperbarui data di Supabase
+                    this.checkRemoteUpdate();
+                }, 3000);
+
+                window.addEventListener("focus", () => {
+                    this.checkRemoteUpdate();
+                });
+
+                document.addEventListener("visibilitychange", () => {
+                    if (document.visibilityState === "visible") {
+                        this.checkRemoteUpdate();
+                    }
+                });
             }
         };
 
-        // Hook otomatis ke fungsi render & aksi penyimpanan agar setiap perubahan langsung tersimpan ke Supabase
-        (function attachSupabaseAutoSyncHooks() {
-            const functionsToHook = [
+        // Hook hanya pada aksi perubahan data (bukan pada fungsi render baca-saja)
+        (function attachSupabaseMutationHooks() {
+            const mutationFunctions = [
                 "saveModalData",
                 "showToast",
-                "renderSchoolProfile",
-                "renderChildPortal",
-                "renderChildCapaian",
-                "renderChildKeuangan",
-                "renderChildPelanggaran",
-                "renderChildHafalan",
-                "renderChildCatatan",
-                "renderAdminAccountDashboard",
-                "renderEvaluatorDashboard"
+                "deleteOrgMember",
+                "deleteEkskulItem",
+                "deletePrestasiItem",
+                "deleteSarprasItem",
+                "deleteBerita",
+                "deleteAgenda",
+                "deletePelanggaran",
+                "togglePelanggaranStatus",
+                "changePelanggaranTingkat",
+                "deleteHafalanItem",
+                "submitParentReply",
+                "submitMusyrifNoteToParent",
+                "markNotificationRead",
+                "dismissNotification"
             ];
 
-            functionsToHook.forEach(fnName => {
+            mutationFunctions.forEach(fnName => {
                 const origFn = window[fnName];
                 if (typeof origFn === "function") {
                     window[fnName] = function(...args) {
                         const result = origFn.apply(this, args);
-                        ElwaSupabaseDB.scheduleSync();
+                        if (ElwaSupabaseDB.isReady && !ElwaSupabaseDB.isFetching) {
+                            ElwaSupabaseDB.scheduleSync(150);
+                        }
                         return result;
                     };
                 }
