@@ -7715,7 +7715,7 @@
                 }
 
                 try {
-                    this.client = window.supabase.createClient(creds.url, creds.anonKey, {
+                    this.client = window.supabase.createClient(creds.url || SUPABASE_CONFIG.url, creds.anonKey || SUPABASE_CONFIG.anonKey, {
                         auth: { persistSession: false }
                     });
                     this.isConfigured = true;
