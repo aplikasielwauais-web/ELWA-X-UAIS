@@ -7462,6 +7462,9 @@
             if (typeof AppState.currentModalHandler === 'function') {
                 AppState.currentModalHandler();
             }
+            if (typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
+                ElwaSupabaseDB.scheduleSync(50);
+            }
         }
 
         let toastTimer = null;
@@ -7498,69 +7501,47 @@
         }
 
         /* ===================================================================
-           INTEGRASI DATABASE SUPABASE (MULTI-DEVICE REALTIME & AUTO-SYNC)
+           INTEGRASI DATABASE SUPABASE PENUH (SEMUA DATA & FOTO - LINTAS PERANGKAT)
            ===================================================================
-           PANDUAN SETUP SQL DI SUPABASE (Jalankan di menu SQL Editor Supabase):
-
-           CREATE TABLE IF NOT EXISTS public.elwa_app_database (
-               id TEXT PRIMARY KEY,
-               payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-               updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-           );
-
-           CREATE TABLE IF NOT EXISTS public.elwa_students (
-               nis TEXT PRIMARY KEY,
-               nama TEXT NOT NULL,
-               kelas TEXT,
-               marhalah TEXT,
-               asrama TEXT,
-               password TEXT,
-               data JSONB NOT NULL DEFAULT '{}'::jsonb,
-               updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-           );
-
-           ALTER TABLE public.elwa_app_database ENABLE ROW LEVEL SECURITY;
-           ALTER TABLE public.elwa_students ENABLE ROW LEVEL SECURITY;
-
-           DROP POLICY IF EXISTS "Allow public read write elwa_app_database" ON public.elwa_app_database;
-           CREATE POLICY "Allow public read write elwa_app_database"
-               ON public.elwa_app_database FOR ALL TO anon, authenticated
-               USING (true) WITH CHECK (true);
-
-           DROP POLICY IF EXISTS "Allow public read write elwa_students" ON public.elwa_students;
-           CREATE POLICY "Allow public read write elwa_students"
-               ON public.elwa_students FOR ALL TO anon, authenticated
-               USING (true) WITH CHECK (true);
-
-           GRANT ALL ON TABLE public.elwa_app_database TO anon, authenticated, service_role;
-           GRANT ALL ON TABLE public.elwa_students TO anon, authenticated, service_role;
+           Mencakup seluruh perubahan data & foto dari:
+           1. Mode Admin (Profil Sekolah, Logo, Banner, Visi-Misi, Struktur + Foto,
+              Akademik, Ekskul, Prestasi, Sarpras, Berita + Foto, Agenda, Kontak,
+              Password Sistem & Santri, Biodata & Foto Santri, Keuangan, Uang Jajan,
+              Berkas Fisik TU, Capaian, Arsip, Pelanggaran, Hafalan, Catatan)
+           2. Mode Guru / Musyrif (Nilai Capaian Akademik/Pesantren/Peminatan,
+              Arsip Nilai, Setoran Hafalan Al-Qur'an, Pelanggaran, Lencana,
+              WA Musyrif, Catatan ke Orang Tua)
+           3. Mode Evaluator (Lencana, WA Musyrif, Catatan Evaluasi)
+           4. Mode Orang Tua / Wali Santri (Bayar Tagihan, Tanggapan Orang Tua,
+              Status Baca Notifikasi Catatan Musyrif)
            =================================================================== */
 
         const SUPABASE_CONFIG = {
             // Masukkan Project URL dan Anon Public Key dari Dashboard Supabase Anda:
-            url: "https://qurybsfqzisuacoiakiw.supabase.co",
-            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1cnlic2ZxemlzdWFjb2lha2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5OTM0OTksImV4cCI6MjEwODU2OTQ5OX0.Y-DlJI0faSCl1Gnn7oTqrcN_tzEZDSXVQWUn07i_S5Y",
+            url: "https://dhjogisagfzlqgcrmhza.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoam9naXNhZ2Z6bHFnY3JtaHphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2OTUxODgsImV4cCI6MjEwOTI3MTE4OH0.aJMwsodJJFPrDpcpoJSEjCxCUAfx6mGX-CUfZPnMgj0",
             mainTable: "elwa_app_database",
             studentTable: "elwa_students",
+            schoolProfileTable: "elwa_school_profile",
             recordId: "elwa_conect_main_v1",
-            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V2"
+            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V3"
         };
 
-        // Kompresi otomatis saat memilih foto dari galeri HP agar ukuran base64 ringan (<100KB)
-        // sehingga cepat tersimpan ke Supabase dan langsung tampil di semua perangkat
+        // Kompresi otomatis untuk semua unggahan foto (Logo, Banner, Pengurus, Berita, Foto Santri)
+        // agar ukuran base64 ringan (<75KB), pasti masuk ke Supabase, dan cepat tampil di perangkat lain
         (function enableAutoImageCompression() {
             const origReadAsDataURL = FileReader.prototype.readAsDataURL;
             FileReader.prototype.readAsDataURL = function(blob) {
-                if (blob && blob.type && blob.type.startsWith("image/") && blob.type !== "image/svg+xml" && blob.size > 60000) {
+                if (blob && blob.type && blob.type.startsWith("image/") && blob.type !== "image/svg+xml") {
                     const readerInstance = this;
                     const img = new Image();
                     const objUrl = URL.createObjectURL(blob);
                     img.onload = function() {
                         URL.revokeObjectURL(objUrl);
                         try {
-                            const maxDim = 800;
-                            let w = img.width || 600;
-                            let h = img.height || 600;
+                            const maxDim = 700;
+                            let w = img.width || 500;
+                            let h = img.height || 500;
                             if (w > maxDim || h > maxDim) {
                                 if (w > h) {
                                     h = Math.round((h * maxDim) / w);
@@ -7575,7 +7556,13 @@
                             canvas.height = h;
                             const ctx = canvas.getContext("2d");
                             ctx.drawImage(img, 0, 0, w, h);
-                            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.80);
+                            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.78);
+                            try {
+                                Object.defineProperty(readerInstance, "result", {
+                                    value: compressedDataUrl,
+                                    configurable: true
+                                });
+                            } catch (e) {}
                             if (typeof readerInstance.onload === "function") {
                                 readerInstance.onload({ target: { result: compressedDataUrl } });
                             }
@@ -7597,7 +7584,7 @@
         const ElwaSupabaseDB = {
             client: null,
             isConfigured: false,
-            isReady: false,        // Mencegah perangkat baru menimpa data Supabase sebelum fetch selesai
+            isReady: false,        // Hanya true setelah data awal dari Supabase berhasil dimuat
             isFetching: false,     // Penanda sedang menarik data dari Supabase
             isSyncing: false,      // Penanda sedang mengirim data ke Supabase
             pendingSync: false,    // Antrean jika ada perubahan saat proses sync masih berjalan
@@ -7631,17 +7618,36 @@
                 return snap;
             },
 
-            // Terapkan data dari Supabase ke AppState
-            applySnapshot(data) {
-                if (!data || typeof data !== "object") return;
+            // Terapkan data dari kolom-kolom tabel Supabase maupun payload JSONB ke AppState
+            applyDatabaseRecord(row) {
+                if (!row || typeof row !== "object") return;
+                const payload = (row.payload && typeof row.payload === "object") ? row.payload : {};
+
+                const mapping = {
+                    adminPassword: row.admin_password !== undefined && row.admin_password !== null ? row.admin_password : payload.adminPassword,
+                    rolePasswords: row.role_passwords && Object.keys(row.role_passwords).length > 0 ? row.role_passwords : payload.rolePasswords,
+                    profile: row.profile && Object.keys(row.profile).length > 0 ? row.profile : payload.profile,
+                    visiMisi: row.visi_misi && Object.keys(row.visi_misi).length > 0 ? row.visi_misi : payload.visiMisi,
+                    organisasi: Array.isArray(row.organisasi) && row.organisasi.length > 0 ? row.organisasi : payload.organisasi,
+                    akademik: row.akademik && Object.keys(row.akademik).length > 0 ? row.akademik : payload.akademik,
+                    sarpras: Array.isArray(row.sarpras) && row.sarpras.length > 0 ? row.sarpras : payload.sarpras,
+                    berita: Array.isArray(row.berita) && row.berita.length > 0 ? row.berita : payload.berita,
+                    agenda: Array.isArray(row.agenda) && row.agenda.length > 0 ? row.agenda : payload.agenda,
+                    kontak: row.kontak && Object.keys(row.kontak).length > 0 ? row.kontak : payload.kontak,
+                    semesters: Array.isArray(row.semesters) && row.semesters.length > 0 ? row.semesters : payload.semesters,
+                    children: Array.isArray(row.children) && row.children.length > 0 ? row.children : payload.children
+                };
+
                 this.persistentKeys.forEach(k => {
-                    if (typeof data[k] !== "undefined" && data[k] !== null) {
-                        AppState[k] = data[k];
+                    if (typeof mapping[k] !== "undefined" && mapping[k] !== null) {
+                        AppState[k] = mapping[k];
+                    } else if (typeof payload[k] !== "undefined" && payload[k] !== null) {
+                        AppState[k] = payload[k];
                     }
                 });
             },
 
-            // Simpan cadangan lokal (hanya untuk fallback jika offline)
+            // Simpan cadangan lokal (hanya dipakai jika belum ada koneksi Supabase)
             saveLocalBackup(snapshot) {
                 try {
                     localStorage.setItem(SUPABASE_CONFIG.localCacheKey, JSON.stringify(snapshot));
@@ -7654,7 +7660,7 @@
                     const raw = localStorage.getItem(SUPABASE_CONFIG.localCacheKey);
                     if (raw) {
                         const parsed = JSON.parse(raw);
-                        this.applySnapshot(parsed);
+                        this.applyDatabaseRecord({ payload: parsed });
                         return true;
                     }
                 } catch (err) {}
@@ -7695,12 +7701,11 @@
                 this.isReady = false;
                 this.lastSyncedHash = JSON.stringify(this.getSnapshot());
 
-                // Render awal sambil menunggu jaringan
+                // Render awal
                 renderDashboard();
 
                 const creds = this.checkCredentials();
                 if (!creds.valid || typeof window.supabase === "undefined") {
-                    // Jika belum dikonfigurasi ke Supabase, gunakan penyimpanan lokal
                     this.isConfigured = false;
                     this.loadLocalBackup();
                     this.lastSyncedHash = JSON.stringify(this.getSnapshot());
@@ -7715,18 +7720,15 @@
                     });
                     this.isConfigured = true;
 
-                    // Ambil data terbaru dari server Supabase terlebih dahulu (Single Source of Truth)
+                    // Ambil data terbaru langsung dari Supabase (tanpa tertimpa cache lokal lama)
                     await this.fetchFromSupabase(true);
 
-                    // Tandai siap menerima perubahan setelah data server berhasil dimuat
                     this.isReady = true;
-
-                    // Aktifkan Realtime + Polling Berkala Lintas Perangkat
                     this.subscribeRealtime();
                     this.startCrossDevicePolling();
                     return true;
                 } catch (err) {
-                    console.warn("[ELWA Supabase] Gagal inisialisasi koneksi:", err);
+                    console.error("[ELWA Supabase] Gagal inisialisasi koneksi:", err);
                     this.isConfigured = false;
                     this.loadLocalBackup();
                     this.lastSyncedHash = JSON.stringify(this.getSnapshot());
@@ -7744,36 +7746,37 @@
                 try {
                     const { data, error } = await this.client
                         .from(SUPABASE_CONFIG.mainTable)
-                        .select("payload, updated_at")
+                        .select("*")
                         .eq("id", SUPABASE_CONFIG.recordId)
                         .maybeSingle();
 
                     if (error) {
                         console.error("[ELWA Supabase] Error saat mengambil data:", error.message);
-                        if (isInitialLoad) {
-                            this.loadLocalBackup();
-                            this.lastSyncedHash = JSON.stringify(this.getSnapshot());
-                            renderDashboard();
-                        }
                         return;
                     }
 
-                    if (data && data.payload && Object.keys(data.payload).length > 0) {
-                        const incomingHash = JSON.stringify(data.payload);
+                    const hasData = data && (
+                        (data.payload && Object.keys(data.payload).length > 0) ||
+                        (Array.isArray(data.children) && data.children.length > 0)
+                    );
+
+                    if (hasData) {
                         this.lastRemoteUpdatedAt = data.updated_at || null;
-                        if (isInitialLoad || incomingHash !== this.lastSyncedHash) {
-                            this.lastSyncedHash = incomingHash;
-                            this.applySnapshot(data.payload);
-                            this.saveLocalBackup(data.payload);
+                        this.applyDatabaseRecord(data);
+                        const newSnap = this.getSnapshot();
+                        const newHash = JSON.stringify(newSnap);
+                        if (isInitialLoad || newHash !== this.lastSyncedHash) {
+                            this.lastSyncedHash = newHash;
+                            this.saveLocalBackup(newSnap);
                             renderDashboard();
                         }
                     } else if (isInitialLoad) {
-                        // Tabel di Supabase masih kosong: unggah data awal ke Supabase (Auto-Seed)
+                        // Tabel di Supabase masih kosong: simpan seluruh data awal ke Supabase (Auto-Seed)
                         this.isReady = true;
                         await this.syncToSupabase(true);
                     }
                 } catch (err) {
-                    console.warn("[ELWA Supabase] Exception saat fetch data:", err);
+                    console.error("[ELWA Supabase] Exception saat fetch data:", err);
                 } finally {
                     this.isFetching = false;
                 }
@@ -7801,7 +7804,7 @@
                 } catch (err) {}
             },
 
-            // Simpan seluruh perubahan data AppState & tabel santri ke Supabase
+            // Simpan seluruh perubahan data (Sekolah, Santri, Foto, Keuangan, Nilai, Hafalan, Catatan, Password) ke Supabase
             async syncToSupabase(force = false) {
                 if (!this.isReady || this.isFetching) return;
 
@@ -7829,55 +7832,149 @@
 
                 try {
                     const nowIso = new Date().toISOString();
+                    const activeRoleName = AppState.editMode
+                        ? (AppState.activeRole === "Super Admin" ? "Admin" : (AppState.activeRole || "Pengelola"))
+                        : "Orang Tua / Wali Santri";
 
-                    // 1. Upsert state utama aplikasi ke tabel elwa_app_database
-                    const { error: mainErr } = await this.client
+                    // 1. Upsert seluruh kolom lengkap ke tabel utama public.elwa_app_database
+                    const fullMainRow = {
+                        id: SUPABASE_CONFIG.recordId,
+                        admin_password: AppState.adminPassword || "adminpintar",
+                        role_passwords: AppState.rolePasswords || {},
+                        profile: AppState.profile || {},
+                        visi_misi: AppState.visiMisi || {},
+                        organisasi: AppState.organisasi || [],
+                        akademik: AppState.akademik || {},
+                        sarpras: AppState.sarpras || [],
+                        berita: AppState.berita || [],
+                        agenda: AppState.agenda || [],
+                        kontak: AppState.kontak || {},
+                        semesters: AppState.semesters || [],
+                        children: AppState.children || [],
+                        payload: snapshot,
+                        updated_by_role: activeRoleName,
+                        updated_at: nowIso
+                    };
+
+                    let { error: mainErr } = await this.client
                         .from(SUPABASE_CONFIG.mainTable)
-                        .upsert(
-                            {
-                                id: SUPABASE_CONFIG.recordId,
-                                payload: snapshot,
-                                updated_at: nowIso
-                            },
-                            { onConflict: "id" }
-                        );
+                        .upsert(fullMainRow, { onConflict: "id" });
+
+                    // Fallback otomatis jika pengguna masih memakai tabel versi lama yang hanya memiliki kolom (id, payload, updated_at)
+                    if (mainErr) {
+                        const fallbackRes = await this.client
+                            .from(SUPABASE_CONFIG.mainTable)
+                            .upsert(
+                                {
+                                    id: SUPABASE_CONFIG.recordId,
+                                    payload: snapshot,
+                                    updated_at: nowIso
+                                },
+                                { onConflict: "id" }
+                            );
+                        mainErr = fallbackRes.error;
+                    }
 
                     if (mainErr) {
-                        console.error("[ELWA Supabase] Gagal menyimpan ke tabel utama:", mainErr.message);
+                        console.error("[ELWA Supabase] Gagal menyimpan ke elwa_app_database:", mainErr.message);
                     } else {
                         this.lastRemoteUpdatedAt = nowIso;
                     }
 
-                    // 2. Upsert data masing-masing santri ke tabel elwa_students
+                    // 2. Upsert data lengkap masing-masing santri (termasuk foto & seluruh sub-data) ke public.elwa_students
                     if (Array.isArray(AppState.children) && AppState.children.length > 0) {
-                        const studentRows = AppState.children.map(c => ({
+                        const fullStudentRows = AppState.children.map(c => ({
                             nis: String(c.nis || c.nama),
                             nama: c.nama || "",
+                            foto: c.foto || "",
+                            password: c.password || "",
                             kelas: c.kelas || "",
                             marhalah: c.marhalah || "",
                             asrama: c.asrama || "",
-                            password: c.password || "",
+                            peminatan: c.peminatan || "",
+                            musyrif: c.musyrif || "",
+                            musyrif_wa_link: c.musyrifWaLink || "",
+                            wali_kelas: c.waliKelas || "",
+                            hafalan: c.hafalan || "",
+                            hafalan_recent: c.hafalanRecent || "",
+                            tahfidz_target: c.tahfidzTarget || "",
+                            tahfidz_progress: c.tahfidzProgress || "",
+                            akademik_rerata: c.akademikRerata || "",
+                            lencana: c.lencana || [],
+                            keuangan: c.keuangan || {},
+                            capaian_per_semester: c.capaianPerSemester || {},
+                            pelanggaran_list: c.pelanggaranList || [],
+                            hafalan_list: c.hafalanList || [],
+                            notifikasi: c.notifikasi || {},
+                            catatan_list: c.catatanList || [],
                             data: c,
+                            updated_by_role: activeRoleName,
                             updated_at: nowIso
                         }));
 
-                        await this.client
+                        const { error: stuErr } = await this.client
                             .from(SUPABASE_CONFIG.studentTable)
-                            .upsert(studentRows, { onConflict: "nis" });
+                            .upsert(fullStudentRows, { onConflict: "nis" });
+
+                        // Fallback jika tabel elwa_students menggunakan kolom versi ringkas
+                        if (stuErr) {
+                            const basicStudentRows = AppState.children.map(c => ({
+                                nis: String(c.nis || c.nama),
+                                nama: c.nama || "",
+                                kelas: c.kelas || "",
+                                marhalah: c.marhalah || "",
+                                asrama: c.asrama || "",
+                                password: c.password || "",
+                                data: c,
+                                updated_at: nowIso
+                            }));
+                            await this.client
+                                .from(SUPABASE_CONFIG.studentTable)
+                                .upsert(basicStudentRows, { onConflict: "nis" });
+                        }
+                    }
+
+                    // 3. Upsert profil sekolah (beserta foto logo & banner) ke public.elwa_school_profile
+                    if (AppState.profile) {
+                        await this.client
+                            .from(SUPABASE_CONFIG.schoolProfileTable)
+                            .upsert(
+                                {
+                                    id: "main",
+                                    nama: AppState.profile.nama || "",
+                                    npsn: AppState.profile.npsn || "",
+                                    akreditasi: AppState.profile.akreditasi || "",
+                                    motto: AppState.profile.motto || "",
+                                    alamat: AppState.profile.alamat || "",
+                                    maps_url: AppState.profile.mapsUrl || "",
+                                    sejarah: AppState.profile.sejarah || "",
+                                    logo_url: AppState.profile.logoUrl || "",
+                                    banner_url: AppState.profile.bannerUrl || "",
+                                    visi: (AppState.visiMisi && AppState.visiMisi.visi) || "",
+                                    misi: (AppState.visiMisi && AppState.visiMisi.misi) || [],
+                                    kurikulum: (AppState.akademik && AppState.akademik.kurikulum) || "",
+                                    keunggulan: (AppState.akademik && AppState.akademik.keunggulan) || "",
+                                    ekskul: (AppState.akademik && AppState.akademik.ekskul) || [],
+                                    prestasi: (AppState.akademik && AppState.akademik.prestasi) || [],
+                                    kontak: AppState.kontak || {},
+                                    updated_at: nowIso
+                                },
+                                { onConflict: "id" }
+                            );
                     }
                 } catch (err) {
-                    console.warn("[ELWA Supabase] Exception saat sinkronisasi:", err);
+                    console.error("[ELWA Supabase] Exception saat sinkronisasi:", err);
                 } finally {
                     this.isSyncing = false;
                     if (this.pendingSync) {
                         this.pendingSync = false;
-                        this.scheduleSync(150);
+                        this.scheduleSync(100);
                     }
                 }
             },
 
-            // Jadwalkan sinkronisasi otomatis hanya jika sudah siap dan ada perubahan data nyata
-            scheduleSync(delayMs = 200) {
+            // Jadwalkan sinkronisasi otomatis ke Supabase
+            scheduleSync(delayMs = 100) {
                 if (!this.isReady || this.isFetching) return;
                 if (this.syncTimer) clearTimeout(this.syncTimer);
                 this.syncTimer = setTimeout(() => {
@@ -7899,20 +7996,8 @@
                                 table: SUPABASE_CONFIG.mainTable,
                                 filter: `id=eq.${SUPABASE_CONFIG.recordId}`
                             },
-                            payload => {
-                                if (this.isSyncing) return;
-                                const newRecord = payload.new;
-                                if (newRecord && newRecord.payload && Object.keys(newRecord.payload).length > 0) {
-                                    const incomingHash = JSON.stringify(newRecord.payload);
-                                    if (incomingHash !== this.lastSyncedHash) {
-                                        this.lastSyncedHash = incomingHash;
-                                        this.lastRemoteUpdatedAt = newRecord.updated_at || this.lastRemoteUpdatedAt;
-                                        this.applySnapshot(newRecord.payload);
-                                        this.saveLocalBackup(newRecord.payload);
-                                        renderDashboard();
-                                    }
-                                } else {
-                                    // Jika payload berukuran besar dan dipotong oleh WAL Realtime, tarik langsung via select
+                            () => {
+                                if (!this.isSyncing) {
                                     this.fetchFromSupabase(false);
                                 }
                             }
@@ -7923,21 +8008,22 @@
                 }
             },
 
-            // Polling ringan & listener fokus tab agar semua perangkat dijamin 100% sinkron
+            // Deteksi perubahan lokal otomatis (setiap 1.5 detik) & cek perubahan dari perangkat lain (setiap 2.5 detik)
             startCrossDevicePolling() {
                 if (this.pollInterval) clearInterval(this.pollInterval);
                 this.pollInterval = setInterval(() => {
-                    // 1. Cek apakah ada perubahan lokal yang belum tersinkronisasi
-                    if (this.isReady && !this.isFetching && !this.isSyncing) {
-                        const currentHash = JSON.stringify(this.getSnapshot());
-                        if (currentHash !== this.lastSyncedHash) {
-                            this.syncToSupabase(false);
-                            return;
-                        }
+                    if (!this.isReady || this.isFetching || this.isSyncing) return;
+
+                    // 1. Jika ada perubahan data lokal apa pun (oleh Admin, Guru, Evaluator, atau Wali), langsung kirim ke Supabase
+                    const currentHash = JSON.stringify(this.getSnapshot());
+                    if (currentHash !== this.lastSyncedHash) {
+                        this.syncToSupabase(false);
+                        return;
                     }
-                    // 2. Cek apakah perangkat lain baru saja memperbarui data di Supabase
+
+                    // 2. Cek apakah perangkat lain baru saja mengubah data di Supabase
                     this.checkRemoteUpdate();
-                }, 3000);
+                }, 2000);
 
                 window.addEventListener("focus", () => {
                     this.checkRemoteUpdate();
@@ -7951,11 +8037,17 @@
             }
         };
 
-        // Hook hanya pada aksi perubahan data (bukan pada fungsi render baca-saja)
+        // Hook langsung pada seluruh fungsi aksi & perubahan data di semua mode
         (function attachSupabaseMutationHooks() {
             const mutationFunctions = [
                 "saveModalData",
                 "showToast",
+                "addNewLencanaItem",
+                "removeLencanaItem",
+                "addNewBerkasRequirement",
+                "addNewMapelToSemester",
+                "addNewKitabToSemester",
+                "addNewPeminatanToSemester",
                 "deleteOrgMember",
                 "deleteEkskulItem",
                 "deletePrestasiItem",
@@ -7978,7 +8070,7 @@
                     window[fnName] = function(...args) {
                         const result = origFn.apply(this, args);
                         if (ElwaSupabaseDB.isReady && !ElwaSupabaseDB.isFetching) {
-                            ElwaSupabaseDB.scheduleSync(150);
+                            ElwaSupabaseDB.scheduleSync(80);
                         }
                         return result;
                     };
