@@ -148,6 +148,9 @@
                 <button onclick="openKelolaRoleModal()" class="text-[10px] bg-elwa-dark text-amber-300 px-2 py-0.5 rounded-lg font-bold">
                     Ganti Peran
                 </button>
+                <button onclick="selectRole(null)" title="Keluar ke Mode Biasa / Orang Tua" class="text-[10px] bg-rose-600 hover:bg-rose-700 text-white px-2 py-0.5 rounded-lg font-bold flex items-center">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                </button>
             </div>
         </div>
 
@@ -675,22 +678,22 @@
                 
                 <!-- Quick Category Horizontal Chips (Navigasi Cepat HP) -->
                 <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1">
-                    <a href="#sec-profil" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
+                    <a href="#sec-profil" onclick="event.preventDefault(); scrollToSection('sec-profil');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
                         <i class="fa-solid fa-school mr-1 text-emerald-700"></i> Profil
                     </a>
-                    <a href="#sec-visi" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
+                    <a href="#sec-visi" onclick="event.preventDefault(); scrollToSection('sec-visi');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
                         <i class="fa-solid fa-compass mr-1 text-amber-600"></i> Visi Misi
                     </a>
-                    <a href="#sec-organisasi" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
+                    <a href="#sec-organisasi" onclick="event.preventDefault(); scrollToSection('sec-organisasi');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
                         <i class="fa-solid fa-sitemap mr-1 text-emerald-600"></i> Struktur
                     </a>
-                    <a href="#sec-akademik" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
+                    <a href="#sec-akademik" onclick="event.preventDefault(); scrollToSection('sec-akademik');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
                         <i class="fa-solid fa-graduation-cap mr-1 text-blue-600"></i> Akademik
                     </a>
-                    <a href="#sec-sarpras" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
+                    <a href="#sec-sarpras" onclick="event.preventDefault(); scrollToSection('sec-sarpras');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
                         <i class="fa-solid fa-building mr-1 text-purple-600"></i> Fasilitas
                     </a>
-                    <a href="#sec-kontak" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
+                    <a href="#sec-kontak" onclick="event.preventDefault(); scrollToSection('sec-kontak');" class="whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-700 border border-slate-200">
                         <i class="fa-solid fa-phone mr-1 text-teal-600"></i> Kontak
                     </a>
                 </div>
@@ -856,9 +859,17 @@
                                 </span>
                             </div>
                         </div>
-                        <button onclick="openAddOrgModal()" class="edit-control hidden text-xs bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg">
-                            + Tambah
-                        </button>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="openAddOrgModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-1 rounded-lg">
+                                + Tambah
+                            </button>
+                            <button onclick="openSelectEditOrgModal()" class="edit-control hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg font-bold">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button onclick="openSelectDeleteOrgModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-trash"></i> Hapus
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Horizontal Scroll Container for Org (Scroll ke kanan) -->
@@ -904,9 +915,13 @@
 
                     <!-- Ekstrakurikuler -->
                     <div class="pt-1">
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-center mb-2 gap-1 flex-wrap">
                             <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Ekstrakurikuler Santri</span>
-                            <button onclick="openAddEkskulModal()" class="edit-control hidden text-[10px] text-emerald-700 font-bold">+ Ekskul</button>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openAddEkskulModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-0.5 rounded-lg">+ Ekskul</button>
+                                <button onclick="openSelectEditEkskulModal()" class="edit-control hidden text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="openSelectDeleteEkskulModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
                         </div>
                         <div id="ekskulContainer" class="flex flex-wrap gap-1.5">
                             <!-- Injected by JS -->
@@ -915,14 +930,18 @@
 
                     <!-- Prestasi Siswa & Guru (Scroll ke samping) -->
                     <div class="pt-2">
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-center mb-2 gap-1 flex-wrap">
                             <div>
                                 <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Prestasi Siswa & Pendidik</span>
                                 <span class="text-[9px] text-slate-400 font-semibold block">
                                     <i class="fa-solid fa-arrows-left-right mr-1 text-[8px] text-amber-600"></i> Geser ke samping
                                 </span>
                             </div>
-                            <button onclick="openAddPrestasiModal()" class="edit-control hidden text-[10px] text-emerald-700 font-bold">+ Prestasi</button>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openAddPrestasiModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-0.5 rounded-lg">+ Prestasi</button>
+                                <button onclick="openSelectEditPrestasiModal()" class="edit-control hidden text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="openSelectDeletePrestasiModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
                         </div>
                         <div id="prestasiContainer" class="flex space-x-3 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-1 px-1 snap-x">
                             <!-- Injected by JS -->
@@ -939,9 +958,17 @@
                             </div>
                             <h3 class="font-black text-xs text-slate-900">Sarana & Prasarana</h3>
                         </div>
-                        <button onclick="openAddSarprasModal()" class="edit-control hidden text-xs bg-emerald-700 text-white font-bold px-2 py-0.5 rounded-lg">
-                            + Tambah
-                        </button>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="openAddSarprasModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-1 rounded-lg">
+                                + Tambah
+                            </button>
+                            <button onclick="openSelectEditSarprasModal()" class="edit-control hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg font-bold">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button onclick="openSelectDeleteSarprasModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-trash"></i> Hapus
+                            </button>
+                        </div>
                     </div>
 
                     <div id="sarprasGrid" class="grid grid-cols-2 gap-2.5">
@@ -966,9 +993,16 @@
 
                     <!-- Berita List (Scroll ke samping) -->
                     <div class="space-y-1.5">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kabar Terkini</span>
-                            <span class="text-[9px] text-slate-400 font-semibold"><i class="fa-solid fa-arrows-left-right mr-1 text-[8px]"></i> Geser</span>
+                        <div class="flex items-center justify-between gap-1 flex-wrap">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kabar Terkini (Berita)</span>
+                                <span class="text-[9px] text-slate-400 font-semibold"><i class="fa-solid fa-arrows-left-right mr-1 text-[8px]"></i> Geser</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openAddBeritaModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-0.5 rounded-lg">+ Input Baru</button>
+                                <button onclick="openSelectEditBeritaModal()" class="edit-control hidden text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="openSelectDeleteBeritaModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
                         </div>
                         <div id="beritaGrid" class="flex space-x-3 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-1 px-1 snap-x">
                             <!-- Injected by JS -->
@@ -977,9 +1011,16 @@
 
                     <!-- Agenda List (Scroll ke samping) -->
                     <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Agenda Terdekat</span>
-                            <span class="text-[9px] text-slate-400 font-semibold"><i class="fa-solid fa-arrows-left-right mr-1 text-[8px]"></i> Geser</span>
+                        <div class="flex items-center justify-between gap-1 flex-wrap">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Agenda Terdekat</span>
+                                <span class="text-[9px] text-slate-400 font-semibold"><i class="fa-solid fa-arrows-left-right mr-1 text-[8px]"></i> Geser</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openAddAgendaModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-0.5 rounded-lg">+ Input Baru</button>
+                                <button onclick="openSelectEditAgendaModal()" class="edit-control hidden text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="openSelectDeleteAgendaModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-0.5 rounded-lg"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
                         </div>
                         <div id="agendaContainer" class="flex space-x-3 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-1 px-1 snap-x">
                             <!-- Injected by JS -->
@@ -1879,6 +1920,7 @@
             editMode: false,
             activeRole: null, // 'Super Admin' | 'Evaluator' | 'Guru' | null
             currentView: 'school', // 'school' | 'studentList' | 'child' | 'evaluator' | 'adminAccount'
+            activeChildTab: 'capaian', // 'capaian' | 'keuangan' | 'pelanggaran' | 'hafalan' | 'catatan'
             activeEvaluatorTab: 'santri', // 'santri' | 'keuangan' | 'capaian' | 'pelanggaran'
             activeEvalKeuSubTab: 'spp', // 'spp' | 'iuran' | 'deposit'
             evalSantriSearchQuery: '',
@@ -3257,6 +3299,15 @@
 
         // Child Portal Sub-Tabs Switcher (Dengan Tab Hafalan Qur'an)
         function switchChildTab(tab) {
+            if (typeof ElwaBackNavigation !== 'undefined' && !ElwaBackNavigation.isRestoring) {
+                if (AppState.currentView === 'child' && AppState.activeChildTab && AppState.activeChildTab !== tab) {
+                    ElwaBackNavigation.recordStep({
+                        type: 'childTab',
+                        tab: AppState.activeChildTab
+                    });
+                }
+            }
+            AppState.activeChildTab = tab;
             const tabs = ['capaian', 'keuangan', 'pelanggaran', 'hafalan', 'catatan'];
             tabs.forEach(t => {
                 const content = document.getElementById(`tabContent${capitalize(t)}`);
@@ -3717,7 +3768,7 @@
                             pengirim: musyrif,
                             peran: "Musyrif Asrama",
                             tanggal: "Hari Ini",
-                            isi: `Selamat bergabung ananda ${nama}. Semoga betah dan istiqomah menuntut ilmu di asrama ELWA.`,
+                            isi: `Selamat bergabung ${nama}. Semoga betah dan istiqomah menuntut ilmu.`,
                             isNew: false
                         }
                     ]
@@ -4113,6 +4164,7 @@
         }
 
         function changePelanggaranTingkat(id, newTingkat) {
+            if (!AppState.editMode || (AppState.activeRole !== 'Super Admin' && AppState.activeRole !== 'Guru')) return;
             const child = AppState.children[AppState.activeChildIdx];
             const item = (child.pelanggaranList || []).find(p => p.id === id);
             if (item) {
@@ -4125,6 +4177,7 @@
         }
 
         function togglePelanggaranStatus(id) {
+            if (!AppState.editMode || (AppState.activeRole !== 'Super Admin' && AppState.activeRole !== 'Guru')) return;
             const child = AppState.children[AppState.activeChildIdx];
             const item = (child.pelanggaranList || []).find(p => p.id === id);
             if (item) {
@@ -4138,6 +4191,7 @@
         }
 
         function deletePelanggaran(id) {
+            if (!AppState.editMode || (AppState.activeRole !== 'Super Admin' && AppState.activeRole !== 'Guru')) return;
             const child = AppState.children[AppState.activeChildIdx];
             child.pelanggaranList = (child.pelanggaranList || []).filter(p => p.id !== id);
             renderChildPelanggaran(child);
@@ -5055,6 +5109,14 @@
         }
 
         function switchEvaluatorTab(tab) {
+            if (typeof ElwaBackNavigation !== 'undefined' && !ElwaBackNavigation.isRestoring) {
+                if (AppState.currentView === 'evaluator' && AppState.activeEvaluatorTab && AppState.activeEvaluatorTab !== tab) {
+                    ElwaBackNavigation.recordStep({
+                        type: 'evalTab',
+                        tab: AppState.activeEvaluatorTab
+                    });
+                }
+            }
             AppState.activeEvaluatorTab = tab;
             const tabs = [
                 { key: 'santri', icon: 'fa-users', sub: '1. Rekap Sekolah', title: 'Data Santri', color: 'emerald' },
@@ -6152,6 +6214,15 @@
             if (tiktokEl) tiktokEl.href = AppState.kontak.tiktokLink;
             const fbEl = document.getElementById('contactFb');
             if (fbEl) fbEl.href = AppState.kontak.fbLink;
+
+            const editControls = document.querySelectorAll('.edit-control');
+            editControls.forEach(el => {
+                if (isAdmin) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
         }
 
         function renderStudentList() {
@@ -6261,6 +6332,18 @@
                 }
             }
 
+            if (typeof ElwaBackNavigation !== 'undefined' && !ElwaBackNavigation.isRestoring) {
+                if (AppState.currentView && AppState.currentView !== view) {
+                    ElwaBackNavigation.recordStep({
+                        type: 'view',
+                        view: AppState.currentView,
+                        childIdx: AppState.activeChildIdx,
+                        childTab: AppState.activeChildTab || 'capaian',
+                        evalTab: AppState.activeEvaluatorTab || 'santri'
+                    });
+                }
+            }
+
             AppState.currentView = view;
             const schoolView = document.getElementById('schoolProfileView');
             const studentListView = document.getElementById('studentDirectoryView');
@@ -6293,6 +6376,7 @@
                     const span = navSchool.querySelector('span');
                     if (span) span.className = "text-[9px] font-black";
                 }
+                renderSchoolProfile();
             } else if (view === 'studentList') {
                 if (studentListView) studentListView.classList.remove('hidden');
                 if (navChild) {
@@ -6764,6 +6848,12 @@
                 if (bannerAdminAccountBtn) bannerAdminAccountBtn.classList.add('hidden');
             }
 
+            // Re-render seluruh tampilan dinamis agar tombol Input, Edit, & Hapus langsung muncul saat Mode Admin aktif
+            // dan langsung hilang bersih saat keluar ke Mode Biasa / Mode Orang Tua
+            renderSchoolProfile();
+            renderStudentList();
+            renderChildPortal();
+
             const editControls = document.querySelectorAll('.edit-control');
             editControls.forEach(el => {
                 if (AppState.editMode && AppState.activeRole === 'Super Admin') {
@@ -6776,7 +6866,16 @@
             syncChildRoleControls();
         }
 
+        function requireSuperAdminAccess() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Akses ditolak! Fitur ini hanya tersedia di Mode Admin.", "error");
+                return false;
+            }
+            return true;
+        }
+
         function openEditProfileModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Edit Profil Sekolah", "fa-pencil");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -6830,6 +6929,7 @@
         }
 
         function openEditBannerModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Ganti Banner Sekolah", "fa-panorama");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -6870,6 +6970,7 @@
         }
 
         function openEditLogoModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Ganti Logo Sekolah", "fa-camera");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -6910,6 +7011,7 @@
         }
 
         function openVisiMisiModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Edit Visi & Misi Lembaga", "fa-compass");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -6936,6 +7038,7 @@
         }
 
         function openAddOrgModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Pengurus / Guru", "fa-user-plus");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7001,12 +7104,14 @@
         }
 
         function deleteOrgMember(id) {
+            if (!requireSuperAdminAccess()) return;
             AppState.organisasi = AppState.organisasi.filter(o => o.id !== id);
             renderSchoolProfile();
             showToast("Pengurus berhasil dihapus", "info");
         }
 
         function openEditAkademikModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Edit Data Akademik", "fa-graduation-cap");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7032,6 +7137,7 @@
         }
 
         function openAddEkskulModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Ekstrakurikuler", "fa-circle-plus");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7067,6 +7173,7 @@
         }
 
         function openAddPrestasiModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Prestasi", "fa-trophy");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7114,6 +7221,7 @@
         }
 
         function openAddSarprasModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Sarana Prasarana", "fa-building");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7160,46 +7268,8 @@
             showToast(`Sarpras "${removed ? removed.nama : ''}" berhasil dihapus!`, "info");
         }
 
-        function openAddSarprasModal() {
-            setModalTitle("Tambah Sarana Prasarana", "fa-building");
-            document.getElementById('modalSaveBtn').style.display = 'block';
-
-            document.getElementById('modalBody').innerHTML = `
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nama Fasilitas</label>
-                    <input id="inpSarNama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: Smart Classroom">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Kuantitas / Jumlah</label>
-                        <input id="inpSarJumlah" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: 18 Ruang">
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Ikon FontAwesome</label>
-                        <input id="inpSarIcon" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="fa-building">
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Deskripsi Fasilitas</label>
-                    <input id="inpSarDesk" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: Dilengkapi AC, IFP 75 inch">
-                </div>
-            `;
-
-            AppState.currentModalHandler = () => {
-                const nama = document.getElementById('inpSarNama').value.trim();
-                const jumlah = document.getElementById('inpSarJumlah').value.trim() || '1 Unit';
-                const icon = document.getElementById('inpSarIcon').value.trim() || 'fa-building';
-                const desk = document.getElementById('inpSarDesk').value.trim() || '';
-                if (!nama) return;
-                AppState.sarpras.push({ nama, jumlah, icon, desk });
-                renderSchoolProfile();
-                closeModal();
-                showToast("Sarpras berhasil ditambahkan!", "success");
-            };
-            openModal();
-        }
-
         function openAddBeritaModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Berita Kegiatan", "fa-newspaper");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7322,12 +7392,14 @@
         }
 
         function deleteBerita(id) {
+            if (!requireSuperAdminAccess()) return;
             AppState.berita = AppState.berita.filter(b => b.id !== id);
             renderSchoolProfile();
             showToast("Berita dihapus", "info");
         }
 
         function openAddAgendaModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Tambah Agenda Terdekat", "fa-calendar-plus");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -7361,6 +7433,7 @@
         }
 
         function deleteAgenda(idx) {
+            if (!requireSuperAdminAccess()) return;
             AppState.agenda.splice(idx, 1);
             renderSchoolProfile();
             showToast("Agenda dihapus", "info");
@@ -8064,7 +8137,429 @@
             openModal();
         }
 
+
+        // MODAL PILIH EDIT & HAPUS STRUKTUR ORGANISASI DARI HEADER
+        function openSelectEditOrgModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.organisasi || [];
+            if (list.length === 0) {
+                showToast("Belum ada pengurus untuk diedit. Silakan klik + Input Baru.", "info");
+                return;
+            }
+            setModalTitle("Pilih Pengurus untuk Diedit", "fa-user-pen");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih nama pengurus struktur organisasi yang ingin Anda edit:</p>
+                    ${list.map(o => `
+                        <button type="button" onclick="openEditOrgModal(${o.id})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                <img src="${o.foto}" class="w-9 h-9 rounded-lg object-cover border border-slate-300 flex-shrink-0">
+                                <div class="min-w-0">
+                                    <h5 class="font-bold text-xs text-slate-900 truncate">${o.nama}</h5>
+                                    <span class="text-[10px] text-emerald-700 font-semibold block truncate">${o.jabatan} • ${o.role}</span>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px] flex-shrink-0 ml-2">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeleteOrgModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.organisasi || [];
+            if (list.length === 0) {
+                showToast("Belum ada data pengurus untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Pengurus Struktur Organisasi", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Pengurus Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang pengurus struktur organisasi yang ingin dihapus:</p>
+                    ${list.map(o => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+                                <img src="${o.foto}" class="w-8 h-8 rounded-lg object-cover border border-slate-300 flex-shrink-0">
+                                <div class="min-w-0">
+                                    <span class="text-xs font-bold text-slate-800 block truncate">${o.nama}</span>
+                                    <span class="text-[10px] text-slate-500 block truncate">${o.jabatan}</span>
+                                </div>
+                            </div>
+                            <input type="checkbox" class="chk-del-org w-4 h-4 text-rose-600 rounded flex-shrink-0" value="${o.id}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIds = Array.from(document.querySelectorAll('.chk-del-org:checked')).map(el => Number(el.value));
+                if (checkedIds.length === 0) {
+                    showToast("Pilih minimal 1 pengurus yang ingin dihapus!", "error");
+                    return;
+                }
+                AppState.organisasi = (AppState.organisasi || []).filter(o => !checkedIds.includes(Number(o.id)));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIds.length} pengurus berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // MODAL PILIH EDIT & HAPUS EKSTRAKURIKULER DARI HEADER
+        function openSelectEditEkskulModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.akademik.ekskul || [];
+            if (list.length === 0) {
+                showToast("Belum ada ekstrakurikuler untuk diedit.", "info");
+                return;
+            }
+            setModalTitle("Pilih Ekstrakurikuler untuk Diedit", "fa-pen");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih ekstrakurikuler yang ingin Anda edit:</p>
+                    ${list.map((e, idx) => `
+                        <button type="button" onclick="openEditEkskulModal(${idx})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <span class="text-xs font-bold text-slate-800"><i class="fa-solid ${e.icon || 'fa-star'} text-emerald-600 mr-2"></i>${e.nama}</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px]">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeleteEkskulModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.akademik.ekskul || [];
+            if (list.length === 0) {
+                showToast("Belum ada ekstrakurikuler untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Ekstrakurikuler Santri", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Ekskul Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang kegiatan ekstrakurikuler yang ingin dihapus:</p>
+                    ${list.map((e, idx) => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <span class="text-xs font-bold text-slate-800"><i class="fa-solid ${e.icon || 'fa-star'} text-emerald-600 mr-2"></i>${e.nama}</span>
+                            <input type="checkbox" class="chk-del-ekskul w-4 h-4 text-rose-600 rounded" value="${idx}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIdx = Array.from(document.querySelectorAll('.chk-del-ekskul:checked')).map(el => Number(el.value));
+                if (checkedIdx.length === 0) {
+                    showToast("Pilih minimal 1 ekstrakurikuler untuk dihapus!", "error");
+                    return;
+                }
+                AppState.akademik.ekskul = (AppState.akademik.ekskul || []).filter((_, i) => !checkedIdx.includes(i));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIdx.length} ekstrakurikuler berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // MODAL PILIH EDIT & HAPUS PRESTASI DARI HEADER
+        function openSelectEditPrestasiModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.akademik.prestasi || [];
+            if (list.length === 0) {
+                showToast("Belum ada data prestasi untuk diedit.", "info");
+                return;
+            }
+            setModalTitle("Pilih Prestasi untuk Diedit", "fa-trophy");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih data prestasi siswa/pendidik yang ingin diedit:</p>
+                    ${list.map((p, idx) => `
+                        <button type="button" onclick="openEditPrestasiModal(${idx})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <div class="min-w-0 pr-2">
+                                <h5 class="font-bold text-xs text-slate-900 truncate">${p.judul}</h5>
+                                <span class="text-[10px] text-emerald-700 font-semibold block truncate">${p.pemenang} • ${p.tingkat} (${p.tahun})</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px] flex-shrink-0">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeletePrestasiModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.akademik.prestasi || [];
+            if (list.length === 0) {
+                showToast("Belum ada data prestasi untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Prestasi Siswa & Pendidik", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Prestasi Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang prestasi yang ingin dihapus:</p>
+                    ${list.map((p, idx) => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <div class="min-w-0 pr-2">
+                                <span class="text-xs font-bold text-slate-800 block truncate">${p.judul}</span>
+                                <span class="text-[10px] text-slate-500 block truncate">${p.pemenang} (${p.tahun})</span>
+                            </div>
+                            <input type="checkbox" class="chk-del-prestasi w-4 h-4 text-rose-600 rounded flex-shrink-0" value="${idx}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIdx = Array.from(document.querySelectorAll('.chk-del-prestasi:checked')).map(el => Number(el.value));
+                if (checkedIdx.length === 0) {
+                    showToast("Pilih minimal 1 prestasi untuk dihapus!", "error");
+                    return;
+                }
+                AppState.akademik.prestasi = (AppState.akademik.prestasi || []).filter((_, i) => !checkedIdx.includes(i));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIdx.length} prestasi berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // MODAL PILIH EDIT & HAPUS SARANA PRASARANA DARI HEADER
+        function openSelectEditSarprasModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.sarpras || [];
+            if (list.length === 0) {
+                showToast("Belum ada sarana & prasarana untuk diedit.", "info");
+                return;
+            }
+            setModalTitle("Pilih Sarana & Prasarana untuk Diedit", "fa-building");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih fasilitas sarana &amp; prasarana yang ingin diedit:</p>
+                    ${list.map((s, idx) => `
+                        <button type="button" onclick="openEditSarprasModal(${idx})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <div class="min-w-0 pr-2">
+                                <h5 class="font-bold text-xs text-slate-900 truncate"><i class="fa-solid ${s.icon || 'fa-building'} text-purple-600 mr-1.5"></i>${s.nama}</h5>
+                                <span class="text-[10px] text-slate-500 block truncate">${s.jumlah} • ${s.desk}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px] flex-shrink-0">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeleteSarprasModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.sarpras || [];
+            if (list.length === 0) {
+                showToast("Belum ada sarana & prasarana untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Sarana & Prasarana", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Fasilitas Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang fasilitas sarana &amp; prasarana yang ingin dihapus:</p>
+                    ${list.map((s, idx) => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <div class="min-w-0 pr-2">
+                                <span class="text-xs font-bold text-slate-800 block truncate">${s.nama} (${s.jumlah})</span>
+                                <span class="text-[10px] text-slate-500 block truncate">${s.desk}</span>
+                            </div>
+                            <input type="checkbox" class="chk-del-sarpras w-4 h-4 text-rose-600 rounded flex-shrink-0" value="${idx}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIdx = Array.from(document.querySelectorAll('.chk-del-sarpras:checked')).map(el => Number(el.value));
+                if (checkedIdx.length === 0) {
+                    showToast("Pilih minimal 1 fasilitas untuk dihapus!", "error");
+                    return;
+                }
+                AppState.sarpras = (AppState.sarpras || []).filter((_, i) => !checkedIdx.includes(i));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIdx.length} fasilitas berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // MODAL PILIH EDIT & HAPUS BERITA DARI HEADER
+        function openSelectEditBeritaModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.berita || [];
+            if (list.length === 0) {
+                showToast("Belum ada berita untuk diedit.", "info");
+                return;
+            }
+            setModalTitle("Pilih Berita untuk Diedit", "fa-newspaper");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih berita kegiatan yang ingin Anda edit:</p>
+                    ${list.map(b => `
+                        <button type="button" onclick="openEditBeritaModal(${b.id})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <div class="min-w-0 pr-2">
+                                <h5 class="font-bold text-xs text-slate-900 truncate">${b.judul}</h5>
+                                <span class="text-[10px] text-slate-500 block truncate">${b.kategori} • ${b.tanggal}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px] flex-shrink-0">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeleteBeritaModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.berita || [];
+            if (list.length === 0) {
+                showToast("Belum ada berita untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Berita Sekolah", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Berita Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang berita yang ingin dihapus:</p>
+                    ${list.map(b => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <div class="min-w-0 pr-2">
+                                <span class="text-xs font-bold text-slate-800 block truncate">${b.judul}</span>
+                                <span class="text-[10px] text-slate-500 block truncate">${b.kategori} • ${b.tanggal}</span>
+                            </div>
+                            <input type="checkbox" class="chk-del-berita w-4 h-4 text-rose-600 rounded flex-shrink-0" value="${b.id}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIds = Array.from(document.querySelectorAll('.chk-del-berita:checked')).map(el => Number(el.value));
+                if (checkedIds.length === 0) {
+                    showToast("Pilih minimal 1 berita untuk dihapus!", "error");
+                    return;
+                }
+                AppState.berita = (AppState.berita || []).filter(b => !checkedIds.includes(Number(b.id)));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIds.length} berita berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // MODAL PILIH EDIT & HAPUS AGENDA DARI HEADER
+        function openSelectEditAgendaModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.agenda || [];
+            if (list.length === 0) {
+                showToast("Belum ada agenda untuk diedit.", "info");
+                return;
+            }
+            setModalTitle("Pilih Agenda untuk Diedit", "fa-calendar-check");
+            document.getElementById('modalSaveBtn').style.display = 'none';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih agenda terdekat yang ingin Anda edit:</p>
+                    ${list.map((ag, idx) => `
+                        <button type="button" onclick="openEditAgendaModal(${idx})" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-between text-left transition">
+                            <div class="min-w-0 pr-2">
+                                <h5 class="font-bold text-xs text-slate-900 truncate">${ag.judul}</h5>
+                                <span class="text-[10px] text-slate-500 block truncate">${ag.tanggal} • ${ag.lokasi}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-[10px] flex-shrink-0">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            openModal();
+        }
+
+        function openSelectDeleteAgendaModal() {
+            if (!requireSuperAdminAccess()) return;
+            const list = AppState.agenda || [];
+            if (list.length === 0) {
+                showToast("Belum ada agenda untuk dihapus.", "info");
+                return;
+            }
+            setModalTitle("Hapus Agenda Terdekat", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Agenda Terpilih';
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Centang agenda kegiatan yang ingin dihapus:</p>
+                    ${list.map((ag, idx) => `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-rose-50/50">
+                            <div class="min-w-0 pr-2">
+                                <span class="text-xs font-bold text-slate-800 block truncate">${ag.judul}</span>
+                                <span class="text-[10px] text-slate-500 block truncate">${ag.tanggal} • ${ag.lokasi}</span>
+                            </div>
+                            <input type="checkbox" class="chk-del-agenda w-4 h-4 text-rose-600 rounded flex-shrink-0" value="${idx}">
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            AppState.currentModalHandler = () => {
+                const checkedIdx = Array.from(document.querySelectorAll('.chk-del-agenda:checked')).map(el => Number(el.value));
+                if (checkedIdx.length === 0) {
+                    showToast("Pilih minimal 1 agenda untuk dihapus!", "error");
+                    return;
+                }
+                AppState.agenda = (AppState.agenda || []).filter((_, i) => !checkedIdx.includes(i));
+                renderSchoolProfile();
+                closeModal();
+                showToast(`${checkedIdx.length} agenda berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
         function openEditKontakModal() {
+            if (!requireSuperAdminAccess()) return;
             setModalTitle("Edit Kontak & Layanan", "fa-headset");
             document.getElementById('modalSaveBtn').style.display = 'block';
 
@@ -8716,7 +9211,13 @@
         // Helper fungsi modal generik
         function openModal() {
             const modal = document.getElementById('universalModal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                const wasHidden = modal.classList.contains('hidden');
+                modal.classList.remove('hidden');
+                if (wasHidden && typeof ElwaBackNavigation !== 'undefined') {
+                    ElwaBackNavigation.pushBrowserState();
+                }
+            }
         }
 
         function closeModal() {
@@ -9370,8 +9871,205 @@
             });
         })();
 
+        /* ===================================================================
+           MANAJEMEN TOMBOL KEMBALI (HARDWARE BACK BUTTON) ANDROID & WEBVIEW
+           Menangani tombol kembali fisik / gestur di HP Android agar kembali ke
+           menu/tampilan sebelumnya atau menutup modal, bukan langsung keluar aplikasi.
+           =================================================================== */
+        const ElwaBackNavigation = {
+            stack: [],
+            isRestoring: false,
+            hasGestureGuard: false,
+            lastBackExitTime: 0,
+
+            pushBrowserState() {
+                try {
+                    window.history.pushState(
+                        {
+                            elwaApp: true,
+                            view: AppState.currentView,
+                            depth: this.stack.length,
+                            ts: Date.now()
+                        },
+                        "",
+                        window.location.href
+                    );
+                } catch (err) {}
+            },
+
+            ensureGestureGuard() {
+                if (!this.hasGestureGuard) {
+                    this.hasGestureGuard = true;
+                    this.pushBrowserState();
+                }
+            },
+
+            recordStep(stepObj) {
+                if (!stepObj) return;
+                // Hindari duplikasi state berturut-turut yang identik
+                const last = this.stack[this.stack.length - 1];
+                if (last && last.type === stepObj.type) {
+                    if (stepObj.type === 'view' && last.view === stepObj.view) return;
+                    if (stepObj.type !== 'view' && last.tab === stepObj.tab) return;
+                }
+                this.stack.push(stepObj);
+                if (this.stack.length > 35) {
+                    this.stack.shift();
+                }
+                this.pushBrowserState();
+            },
+
+            handleBack() {
+                // 1. Jika ada Modal Bottom Sheet yang sedang terbuka, tutup modal terlebih dahulu
+                const modal = document.getElementById('universalModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                    this.pushBrowserState();
+                    return true;
+                }
+
+                // 2. Cek riwayat perpindahan menu / sub-tab pada stack navigasi
+                while (this.stack.length > 0) {
+                    const prev = this.stack.pop();
+                    if (!prev) continue;
+
+                    this.isRestoring = true;
+                    try {
+                        if (prev.type === 'childTab' && AppState.currentView === 'child') {
+                            if (prev.tab && prev.tab !== AppState.activeChildTab) {
+                                switchChildTab(prev.tab);
+                                this.isRestoring = false;
+                                this.pushBrowserState();
+                                return true;
+                            }
+                        } else if (prev.type === 'evalTab' && AppState.currentView === 'evaluator') {
+                            if (prev.tab && prev.tab !== AppState.activeEvaluatorTab) {
+                                switchEvaluatorTab(prev.tab);
+                                this.isRestoring = false;
+                                this.pushBrowserState();
+                                return true;
+                            }
+                        } else if (prev.type === 'view' && prev.view && prev.view !== AppState.currentView) {
+                            // Jika kembali ke tampilan 'child' tetapi belum terverifikasi di mode wali, arahkan ke 'studentList'
+                            const isBypassRole = AppState.editMode && (AppState.activeRole === 'Super Admin' || AppState.activeRole === 'Guru' || AppState.activeRole === 'Evaluator');
+                            const targetIdx = typeof prev.childIdx === 'number' ? prev.childIdx : AppState.activeChildIdx;
+                            const isUnlocked = (AppState.unlockedStudentIndices || []).includes(targetIdx);
+
+                            if (prev.view === 'child' && !isBypassRole && !isUnlocked) {
+                                switchView('studentList');
+                            } else if ((prev.view === 'adminAccount' && (!AppState.editMode || AppState.activeRole !== 'Super Admin')) ||
+                                       (prev.view === 'evaluator' && (!AppState.editMode || AppState.activeRole !== 'Evaluator'))) {
+                                switchView('school');
+                            } else {
+                                if (typeof prev.childIdx === 'number') {
+                                    AppState.activeChildIdx = prev.childIdx;
+                                }
+                                switchView(prev.view);
+                                if (prev.view === 'child' && prev.childTab) {
+                                    switchChildTab(prev.childTab);
+                                } else if (prev.view === 'evaluator' && prev.evalTab) {
+                                    switchEvaluatorTab(prev.evalTab);
+                                }
+                            }
+                            this.isRestoring = false;
+                            this.pushBrowserState();
+                            return true;
+                        }
+                    } finally {
+                        this.isRestoring = false;
+                    }
+                }
+
+                // 3. Fallback hierarki menu apabila stack kosong namun pengguna sedang tidak di Beranda Sekolah
+                this.isRestoring = true;
+                try {
+                    if (AppState.currentView === 'child') {
+                        if (AppState.activeChildTab && AppState.activeChildTab !== 'capaian') {
+                            switchChildTab('capaian');
+                        } else {
+                            switchView('studentList');
+                        }
+                        this.pushBrowserState();
+                        return true;
+                    }
+
+                    if (AppState.currentView === 'evaluator') {
+                        if (AppState.activeEvaluatorTab && AppState.activeEvaluatorTab !== 'santri') {
+                            switchEvaluatorTab('santri');
+                        } else {
+                            switchView('school');
+                        }
+                        this.pushBrowserState();
+                        return true;
+                    }
+
+                    if (AppState.currentView === 'studentList' || AppState.currentView === 'adminAccount') {
+                        switchView('school');
+                        this.pushBrowserState();
+                        return true;
+                    }
+                } finally {
+                    this.isRestoring = false;
+                }
+
+                // 4. Jika sudah di Beranda Profil Sekolah ('school'):
+                // Jika halaman sedang ter-scroll jauh ke bawah, kembalikan ke atas dulu
+                const scrollArea = document.getElementById('appMainScrollArea');
+                if (scrollArea && scrollArea.scrollTop > 120) {
+                    scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+                    this.pushBrowserState();
+                    return true;
+                }
+
+                // 5. Proteksi "Tekan sekali lagi untuk keluar" saat berada di halaman paling awal
+                const now = Date.now();
+                if (now - this.lastBackExitTime < 2200) {
+                    if (navigator.app && typeof navigator.app.exitApp === 'function') {
+                        navigator.app.exitApp();
+                    }
+                    return false;
+                }
+
+                this.lastBackExitTime = now;
+                showToast("Tekan sekali lagi untuk keluar aplikasi", "info");
+                this.pushBrowserState();
+                return true;
+            },
+
+            init() {
+                try {
+                    window.history.replaceState({ elwaRoot: true }, "", window.location.href);
+                } catch (err) {}
+                this.pushBrowserState();
+
+                // Pastikan history guard aktif saat sentuhan/klik pertama pengguna (syarat Chromium Android WebView)
+                const activateGestureGuard = () => {
+                    this.ensureGestureGuard();
+                };
+                document.addEventListener('touchstart', activateGestureGuard, { passive: true });
+                document.addEventListener('click', activateGestureGuard, true);
+
+                // Listener standar HTML5 History API (Android System WebView, Chrome, PWA, Website2APK)
+                window.addEventListener('popstate', (e) => {
+                    this.handleBack();
+                });
+
+                // Listener khusus Cordova / Capacitor / PhoneGap / Ionic APK
+                document.addEventListener('backbutton', (e) => {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    this.handleBack();
+                }, false);
+
+                // Hook global jika dipanggil langsung oleh Native Android WebView (evaluateJavascript)
+                window.onBackPressed = () => this.handleBack();
+                window.handleAndroidBackButton = () => this.handleBack();
+            }
+        };
+
         window.onload = function() {
             ElwaSupabaseDB.init();
+            ElwaBackNavigation.init();
         };
     </script>
 </body>
