@@ -729,12 +729,18 @@
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/40 text-white backdrop-blur-md border border-white/20">
                                 Akreditasi: <strong id="schoolAkreditasi" class="text-elwa-amber">A (Unggul)</strong>
                             </span>
-                            <div class="flex items-center space-x-1.5">
+                            <div class="flex items-center flex-wrap justify-end gap-1">
                                 <button onclick="openEditBannerModal()" class="edit-control hidden bg-black/60 hover:bg-black/80 text-white backdrop-blur-md px-2 py-1 rounded-xl text-[10px] font-bold shadow flex items-center border border-white/30">
                                     <i class="fa-solid fa-panorama mr-1 text-elwa-amber"></i> Banner
                                 </button>
+                                <button onclick="openAddProfileModal()" class="edit-control hidden bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-xl text-[10px] font-bold shadow flex items-center">
+                                    <i class="fa-solid fa-plus mr-1"></i> Input Baru
+                                </button>
                                 <button onclick="openEditProfileModal()" class="edit-control hidden bg-white text-elwa-dark px-2.5 py-1 rounded-xl text-[10px] font-bold shadow">
                                     <i class="fa-solid fa-pencil mr-1"></i> Edit Data
+                                </button>
+                                <button onclick="openDeleteProfileModal()" class="edit-control hidden bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-xl text-[10px] font-bold shadow flex items-center">
+                                    <i class="fa-solid fa-trash mr-1"></i> Hapus
                                 </button>
                             </div>
                         </div>
@@ -791,6 +797,9 @@
                                 Didirikan pada tahun 2012 atas inisiasi para tokoh pendidikan Islam dan ulama Nusantara, SMA IT ELWA hadir sebagai wujud integrasi komprehensif antara kurikulum nasional dan nilai-nilai asrama santri. Melalui moto ELWA (Edukasi, Lembaga, Wali & Asrama), kami senantiasa memperkuat kolaborasi bersama orang tua santri dalam mencetak pemimpin masa depan berjiwa qur'ani, cakap riset teknologi, dan siap bersaing di kancah global.
                             </p>
                         </div>
+
+                        <!-- Informasi Tambahan Profil Sekolah (Dinamis: Input Baru, Edit, Hapus) -->
+                        <div id="extraProfileItemsContainer" class="space-y-2 mt-2.5 empty:hidden"></div>
                     </div>
                 </div>
 
@@ -803,9 +812,17 @@
                             </div>
                             <h3 class="font-black text-xs text-slate-900">Visi & Misi Lembaga</h3>
                         </div>
-                        <button onclick="openVisiMisiModal()" class="edit-control hidden text-xs text-emerald-700 font-bold">
-                            <i class="fa-solid fa-pen"></i> Edit
-                        </button>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="openAddVisiMisiItemModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-1 rounded-lg">
+                                + Input Baru
+                            </button>
+                            <button onclick="openVisiMisiModal()" class="edit-control hidden text-xs bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg font-bold">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button onclick="openDeleteVisiMisiModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-trash"></i> Hapus
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Visi Box -->
@@ -859,9 +876,17 @@
                             </div>
                             <h3 class="font-black text-xs text-slate-900">Data Akademik & Ekskul</h3>
                         </div>
-                        <button onclick="openEditAkademikModal()" class="edit-control hidden text-xs text-emerald-700 font-bold">
-                            <i class="fa-solid fa-pen"></i> Edit
-                        </button>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="openAddAkademikInfoModal()" class="edit-control hidden text-[10px] bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2 py-1 rounded-lg">
+                                + Input Baru
+                            </button>
+                            <button onclick="openEditAkademikModal()" class="edit-control hidden text-xs bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg font-bold">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button onclick="openDeleteAkademikModal()" class="edit-control hidden text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-trash"></i> Hapus
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Kurikulum & Keunggulan -->
@@ -874,6 +899,7 @@
                             <span class="text-[9px] font-extrabold uppercase text-amber-800 tracking-wider">Keunggulan Utama</span>
                             <h4 id="schoolAdvantage" class="text-xs font-black text-elwa-dark">Tahfidz Al-Qur'an 30 Juz Bersanad & Mutaba'ah Digital</h4>
                         </div>
+                        <div id="extraAkademikItemsContainer" class="space-y-1.5 pt-1 border-t border-emerald-200/60 empty:hidden"></div>
                     </div>
 
                     <!-- Ekstrakurikuler -->
@@ -5803,11 +5829,13 @@
         }
 
         function renderSchoolProfile() {
+            const isAdmin = AppState.editMode && AppState.activeRole === 'Super Admin';
+
             // Header sekolah dinamis
             const hLogo = document.getElementById('headerSchoolLogo');
             const hName = document.getElementById('headerSchoolName');
             if (hLogo) hLogo.src = AppState.profile.logoUrl;
-            if (hName) hName.innerText = AppState.profile.nama;
+            if (hName) hName.innerText = AppState.profile.nama || "Profil Sekolah";
 
             // Foto Banner & Logo Sekolah
             const bannerBox = document.getElementById('schoolBannerBox');
@@ -5817,165 +5845,293 @@
 
             // Informasi Utama Sekolah
             const sName = document.getElementById('schoolName');
-            if (sName) sName.innerText = AppState.profile.nama;
+            if (sName) sName.innerText = AppState.profile.nama || "-";
             const sNpsn = document.getElementById('schoolNpsn');
-            if (sNpsn) sNpsn.innerText = AppState.profile.npsn;
+            if (sNpsn) sNpsn.innerText = AppState.profile.npsn || "-";
             const sAkred = document.getElementById('schoolAkreditasi');
-            if (sAkred) sAkred.innerText = AppState.profile.akreditasi;
+            if (sAkred) sAkred.innerText = AppState.profile.akreditasi || "-";
             const sMotto = document.getElementById('schoolMotto');
-            if (sMotto) sMotto.innerText = `"${AppState.profile.motto}"`;
+            if (sMotto) sMotto.innerText = AppState.profile.motto ? `"${AppState.profile.motto}"` : "-";
             const sAddress = document.getElementById('schoolAddress');
-            if (sAddress) sAddress.innerText = AppState.profile.alamat;
+            if (sAddress) sAddress.innerText = AppState.profile.alamat || "-";
             const sMaps = document.getElementById('schoolMapsLink');
-            if (sMaps) sMaps.href = AppState.profile.mapsUrl;
+            if (sMaps) sMaps.href = AppState.profile.mapsUrl || "https://maps.google.com";
             const sHistory = document.getElementById('schoolHistory');
-            if (sHistory) sHistory.innerText = AppState.profile.sejarah;
+            if (sHistory) sHistory.innerText = AppState.profile.sejarah || "-";
 
-            // Visi & Misi
-            const vText = document.getElementById('visionText');
-            if (vText) vText.innerText = `"${AppState.visiMisi.visi}"`;
-            const mList = document.getElementById('missionList');
-            if (mList) {
-                mList.innerHTML = AppState.visiMisi.misi.map((m, idx) => `
-                    <li class="flex items-start space-x-2">
-                        <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
-                        <span class="leading-relaxed">${m}</span>
-                    </li>
+            // Item Tambahan Profil Sekolah (Jika Ada)
+            const extraProfEl = document.getElementById('extraProfileItemsContainer');
+            if (extraProfEl) {
+                const extraList = AppState.profile.extraItems || [];
+                extraProfEl.innerHTML = extraList.map((item, idx) => `
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-slate-800 text-xs flex items-center">
+                                <i class="fa-solid fa-circle-info text-emerald-600 mr-1.5"></i> ${item.judul}
+                            </span>
+                            ${isAdmin ? `
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="openEditProfileExtraItemModal(${idx})" class="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-[9px] font-bold">
+                                        <i class="fa-solid fa-pen mr-0.5"></i> Edit
+                                    </button>
+                                    <button onclick="deleteProfileExtraItem(${idx})" class="px-2 py-0.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 text-[9px] font-bold">
+                                        <i class="fa-solid fa-trash mr-0.5"></i> Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">${item.isi}</p>
+                    </div>
                 `).join('');
             }
 
-            // Struktur Organisasi (Scroll ke Samping)
+            // Visi & Misi (Setiap poin misi dilengkapi tombol Edit dan Hapus saat Mode Admin)
+            const vText = document.getElementById('visionText');
+            if (vText) vText.innerText = AppState.visiMisi.visi ? `"${AppState.visiMisi.visi}"` : "Belum ada visi yang diinput.";
+            const mList = document.getElementById('missionList');
+            if (mList) {
+                if (!AppState.visiMisi.misi || AppState.visiMisi.misi.length === 0) {
+                    mList.innerHTML = `<li class="text-[11px] text-slate-400 italic">Belum ada poin misi sekolah.</li>`;
+                } else {
+                    mList.innerHTML = AppState.visiMisi.misi.map((m, idx) => `
+                        <li class="flex items-start justify-between gap-2 p-1.5 rounded-xl ${isAdmin ? 'bg-slate-50 border border-slate-200/80' : ''}">
+                            <div class="flex items-start space-x-2 min-w-0">
+                                <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
+                                <span class="leading-relaxed">${m}</span>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="flex items-center space-x-1 flex-shrink-0">
+                                    <button onclick="openEditSingleMisiModal(${idx})" class="w-6 h-6 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 flex items-center justify-center text-[9px]" title="Edit Misi">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button onclick="deleteSingleMisiItem(${idx})" class="w-6 h-6 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 flex items-center justify-center text-[9px]" title="Hapus Misi">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </li>
+                    `).join('');
+                }
+            }
+
+            // Struktur Organisasi (Scroll ke Samping - Dilengkapi Edit & Hapus per Kartu)
             const orgGrid = document.getElementById('orgStructureGrid');
             if (orgGrid) {
-                orgGrid.innerHTML = AppState.organisasi.map(o => `
-                    <div class="flex-shrink-0 w-36 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-center snap-start relative shadow-xs">
-                        <div class="w-14 h-14 mx-auto rounded-xl overflow-hidden border-2 border-emerald-600/30 mb-2 shadow-xs bg-emerald-50">
-                            <img src="${o.foto}" alt="${o.nama}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Guru'">
+                if (!AppState.organisasi || AppState.organisasi.length === 0) {
+                    orgGrid.innerHTML = `<div class="p-3 text-[11px] text-slate-400 italic">Belum ada data pengurus struktur organisasi.</div>`;
+                } else {
+                    orgGrid.innerHTML = AppState.organisasi.map(o => `
+                        <div class="flex-shrink-0 w-36 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-center snap-start relative shadow-xs flex flex-col justify-between">
+                            <div>
+                                <div class="w-14 h-14 mx-auto rounded-xl overflow-hidden border-2 border-emerald-600/30 mb-2 shadow-xs bg-emerald-50">
+                                    <img src="${o.foto}" alt="${o.nama}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/0B3B2C/FBBF24?text=Guru'">
+                                </div>
+                                <h5 class="font-black text-[11px] text-slate-900 leading-tight truncate" title="${o.nama}">${o.nama}</h5>
+                                <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md inline-block mt-1">${o.jabatan}</span>
+                                <p class="text-[9px] text-slate-500 mt-1 line-clamp-1 leading-tight">${o.role}</p>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="pt-2 mt-2 border-t border-slate-200 flex items-center justify-center space-x-1">
+                                    <button onclick="openEditOrgModal(${o.id})" class="flex-1 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[9px] flex items-center justify-center" title="Edit Pengurus">
+                                        <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                    </button>
+                                    <button onclick="deleteOrgMember(${o.id})" class="flex-1 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[9px] flex items-center justify-center" title="Hapus Pengurus">
+                                        <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
-                        <h5 class="font-black text-[11px] text-slate-900 leading-tight truncate" title="${o.nama}">${o.nama}</h5>
-                        <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md inline-block mt-1">${o.jabatan}</span>
-                        <p class="text-[9px] text-slate-500 mt-1 line-clamp-1 leading-tight">${o.role}</p>
-                        ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                            <button onclick="deleteOrgMember(${o.id})" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 flex items-center justify-center text-[9px]" title="Hapus">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('');
+                    `).join('');
+                }
             }
 
             // Data Akademik & Ekskul
             const cName = document.getElementById('curriculumName');
-            if (cName) cName.innerText = AppState.akademik.kurikulum;
+            if (cName) cName.innerText = AppState.akademik.kurikulum || "-";
             const sAdv = document.getElementById('schoolAdvantage');
-            if (sAdv) sAdv.innerText = AppState.akademik.keunggulan;
+            if (sAdv) sAdv.innerText = AppState.akademik.keunggulan || "-";
 
+            // Item Tambahan Akademik (Jika Ada)
+            const extraAkadEl = document.getElementById('extraAkademikItemsContainer');
+            if (extraAkadEl) {
+                const extraAkadList = AppState.akademik.extraItems || [];
+                extraAkadEl.innerHTML = extraAkadList.map((item, idx) => `
+                    <div class="pt-1.5 border-t border-emerald-200/50 flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="text-[9px] font-extrabold uppercase text-emerald-800 tracking-wider block">${item.label}</span>
+                            <h4 class="text-xs font-black text-elwa-dark">${item.nilai}</h4>
+                        </div>
+                        ${isAdmin ? `
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                <button onclick="openEditAkademikExtraModal(${idx})" class="px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 text-[9px] font-bold">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteAkademikExtraItem(${idx})" class="px-1.5 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 text-[9px] font-bold">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
+
+            // Ekstrakurikuler Santri (Dilengkapi Edit & Hapus per Item)
             const ekskulEl = document.getElementById('ekskulContainer');
             if (ekskulEl) {
-                ekskulEl.innerHTML = AppState.akademik.ekskul.map((e, idx) => `
-                    <span class="inline-flex items-center text-[10px] font-bold bg-slate-100 text-slate-800 px-2.5 py-1 rounded-xl border border-slate-200">
-                        <i class="fa-solid ${e.icon || 'fa-star'} mr-1.5 text-emerald-600 text-[10px]"></i> ${e.nama}
-                        ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                            <button onclick="deleteEkskulItem(${idx})" class="ml-1.5 text-rose-500 hover:text-rose-700 text-[10px] p-0.5" title="Hapus Ekskul">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        ` : ''}
-                    </span>
-                `).join('');
-            }
-
-            // Prestasi (Scroll ke Samping)
-            const prestasiEl = document.getElementById('prestasiContainer');
-            if (prestasiEl) {
-                prestasiEl.innerHTML = AppState.akademik.prestasi.map((p, idx) => `
-                    <div class="flex-shrink-0 w-52 p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-emerald-50/40 border border-amber-200 snap-start shadow-xs relative">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[9px] font-black bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">${p.tingkat}</span>
-                            <div class="flex items-center space-x-1.5">
-                                <span class="text-[9px] font-bold text-slate-400">${p.tahun}</span>
-                                ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                                    <button onclick="deletePrestasiItem(${idx})" class="w-4 h-4 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 flex items-center justify-center text-[8px]" title="Hapus Prestasi">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <h5 class="font-bold text-xs text-slate-900 leading-snug line-clamp-2">${p.judul}</h5>
-                        <span class="text-[10px] text-emerald-800 font-semibold mt-1 block truncate"><i class="fa-solid fa-trophy text-amber-500 mr-1 text-[9px]"></i>${p.pemenang}</span>
-                    </div>
-                `).join('');
-            }
-
-            // Sarana & Prasarana
-            const sarprasEl = document.getElementById('sarprasGrid');
-            if (sarprasEl) {
-                sarprasEl.innerHTML = AppState.sarpras.map((s, idx) => `
-                    <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-start space-x-2 relative group">
-                        <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                            <i class="fa-solid ${s.icon || 'fa-building'}"></i>
-                        </div>
-                        <div class="min-w-0 flex-1 pr-4">
-                            <h5 class="font-bold text-xs text-slate-900 leading-tight truncate">${s.nama}</h5>
-                            <span class="text-[9px] font-extrabold text-purple-700 block">${s.jumlah}</span>
-                            <p class="text-[9px] text-slate-500 line-clamp-1 mt-0.5">${s.desk}</p>
-                        </div>
-                        ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                            <button onclick="deleteSarprasItem(${idx})" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 flex items-center justify-center text-[9px]" title="Hapus Sarpras">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('');
-            }
-
-            // Berita Sekolah (Scroll ke Samping - Bisa Diklik untuk Detail Berita Lengkap)
-            const beritaEl = document.getElementById('beritaGrid');
-            if (beritaEl) {
-                beritaEl.innerHTML = AppState.berita.map(b => `
-                    <div onclick="openDetailBeritaModal(${b.id})" class="flex-shrink-0 w-60 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 overflow-hidden snap-start shadow-xs flex flex-col relative cursor-pointer card-press transition">
-                        <div class="h-28 bg-slate-200 relative overflow-hidden">
-                            <img src="${b.foto}" alt="${b.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200/0B3B2C/FBBF24?text=Berita'">
-                            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">${b.kategori}</span>
-                            ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                                <button onclick="event.stopPropagation(); deleteBerita(${b.id})" class="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm flex items-center" title="Hapus Berita">
-                                    <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                if (!AppState.akademik.ekskul || AppState.akademik.ekskul.length === 0) {
+                    ekskulEl.innerHTML = `<span class="text-[11px] text-slate-400 italic">Belum ada data ekstrakurikuler.</span>`;
+                } else {
+                    ekskulEl.innerHTML = AppState.akademik.ekskul.map((e, idx) => `
+                        <span class="inline-flex items-center text-[10px] font-bold bg-slate-100 text-slate-800 px-2.5 py-1 rounded-xl border border-slate-200">
+                            <i class="fa-solid ${e.icon || 'fa-star'} mr-1.5 text-emerald-600 text-[10px]"></i> ${e.nama}
+                            ${isAdmin ? `
+                                <button onclick="openEditEkskulModal(${idx})" class="ml-1.5 text-amber-600 hover:text-amber-800 text-[10px] p-0.5" title="Edit Ekskul">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteEkskulItem(${idx})" class="ml-1 text-rose-500 hover:text-rose-700 text-[10px] p-0.5" title="Hapus Ekskul">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             ` : ''}
-                        </div>
-                        <div class="p-2.5 flex-1 flex flex-col justify-between">
-                            <div>
-                                <span class="text-[9px] text-slate-400 font-semibold block mb-1"><i class="fa-solid fa-calendar mr-1"></i>${b.tanggal}</span>
-                                <h5 class="font-bold text-xs text-slate-900 leading-snug line-clamp-2">${b.judul}</h5>
-                                <p class="text-[10px] text-slate-600 mt-1 line-clamp-2">${b.ringkasan}</p>
-                            </div>
-                            <div class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
-                                <span class="text-[10px] font-extrabold text-emerald-700 flex items-center">
-                                    Baca Selengkapnya <i class="fa-solid fa-arrow-right ml-1 text-[9px]"></i>
-                                </span>
-                                ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                                    <button onclick="event.stopPropagation(); deleteBerita(${b.id})" class="text-[9px] text-rose-600 font-bold hover:underline">Hapus</button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                        </span>
+                    `).join('');
+                }
             }
 
-            // Agenda Terdekat (Agenda Terbaru di Kiri / Urutan Pertama)
+            // Prestasi Siswa & Pendidik (Scroll ke Samping - Dilengkapi Edit & Hapus per Kartu)
+            const prestasiEl = document.getElementById('prestasiContainer');
+            if (prestasiEl) {
+                if (!AppState.akademik.prestasi || AppState.akademik.prestasi.length === 0) {
+                    prestasiEl.innerHTML = `<div class="p-3 text-[11px] text-slate-400 italic">Belum ada data prestasi siswa &amp; pendidik.</div>`;
+                } else {
+                    prestasiEl.innerHTML = AppState.akademik.prestasi.map((p, idx) => `
+                        <div class="flex-shrink-0 w-52 p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-emerald-50/40 border border-amber-200 snap-start shadow-xs relative flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[9px] font-black bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">${p.tingkat}</span>
+                                    <span class="text-[9px] font-bold text-slate-400">${p.tahun}</span>
+                                </div>
+                                <h5 class="font-bold text-xs text-slate-900 leading-snug line-clamp-2">${p.judul}</h5>
+                                <span class="text-[10px] text-emerald-800 font-semibold mt-1 block truncate"><i class="fa-solid fa-trophy text-amber-500 mr-1 text-[9px]"></i>${p.pemenang}</span>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="pt-2 mt-2 border-t border-amber-200/70 flex items-center space-x-1">
+                                    <button onclick="openEditPrestasiModal(${idx})" class="flex-1 py-1 rounded-lg bg-amber-200/80 hover:bg-amber-300 text-amber-950 font-bold text-[9px] flex items-center justify-center" title="Edit Prestasi">
+                                        <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                    </button>
+                                    <button onclick="deletePrestasiItem(${idx})" class="flex-1 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[9px] flex items-center justify-center" title="Hapus Prestasi">
+                                        <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Sarana & Prasarana (Dilengkapi Edit & Hapus per Kartu)
+            const sarprasEl = document.getElementById('sarprasGrid');
+            if (sarprasEl) {
+                if (!AppState.sarpras || AppState.sarpras.length === 0) {
+                    sarprasEl.innerHTML = `<div class="col-span-2 p-3 text-[11px] text-slate-400 italic text-center">Belum ada data sarana &amp; prasarana.</div>`;
+                } else {
+                    sarprasEl.innerHTML = AppState.sarpras.map((s, idx) => `
+                        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between relative group">
+                            <div class="flex items-start space-x-2">
+                                <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+                                    <i class="fa-solid ${s.icon || 'fa-building'}"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h5 class="font-bold text-xs text-slate-900 leading-tight truncate">${s.nama}</h5>
+                                    <span class="text-[9px] font-extrabold text-purple-700 block">${s.jumlah}</span>
+                                    <p class="text-[9px] text-slate-500 line-clamp-2 mt-0.5">${s.desk}</p>
+                                </div>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="pt-2 mt-2 border-t border-slate-200 flex items-center space-x-1">
+                                    <button onclick="openEditSarprasModal(${idx})" class="flex-1 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[9px] flex items-center justify-center" title="Edit Sarpras">
+                                        <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                    </button>
+                                    <button onclick="deleteSarprasItem(${idx})" class="flex-1 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[9px] flex items-center justify-center" title="Hapus Sarpras">
+                                        <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Berita Sekolah (Scroll ke Samping - Dilengkapi Edit & Hapus per Berita)
+            const beritaEl = document.getElementById('beritaGrid');
+            if (beritaEl) {
+                if (!AppState.berita || AppState.berita.length === 0) {
+                    beritaEl.innerHTML = `<div class="p-3 text-[11px] text-slate-400 italic">Belum ada kabar berita sekolah.</div>`;
+                } else {
+                    beritaEl.innerHTML = AppState.berita.map(b => `
+                        <div onclick="openDetailBeritaModal(${b.id})" class="flex-shrink-0 w-60 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 overflow-hidden snap-start shadow-xs flex flex-col relative cursor-pointer card-press transition">
+                            <div class="h-28 bg-slate-200 relative overflow-hidden">
+                                <img src="${b.foto}" alt="${b.judul}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200/0B3B2C/FBBF24?text=Berita'">
+                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">${b.kategori}</span>
+                                ${isAdmin ? `
+                                    <div class="absolute top-2 right-2 flex items-center space-x-1">
+                                        <button onclick="event.stopPropagation(); openEditBeritaModal(${b.id})" class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-amber-400 hover:bg-amber-500 text-elwa-dark shadow-sm flex items-center" title="Edit Berita">
+                                            <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                        </button>
+                                        <button onclick="event.stopPropagation(); deleteBerita(${b.id})" class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm flex items-center" title="Hapus Berita">
+                                            <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="p-2.5 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 font-semibold block mb-1"><i class="fa-solid fa-calendar mr-1"></i>${b.tanggal}</span>
+                                    <h5 class="font-bold text-xs text-slate-900 leading-snug line-clamp-2">${b.judul}</h5>
+                                    <p class="text-[10px] text-slate-600 mt-1 line-clamp-2">${b.ringkasan}</p>
+                                </div>
+                                <div class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                                    <span class="text-[10px] font-extrabold text-emerald-700 flex items-center">
+                                        Baca Selengkapnya <i class="fa-solid fa-arrow-right ml-1 text-[9px]"></i>
+                                    </span>
+                                    ${isAdmin ? `
+                                        <div class="flex items-center space-x-2">
+                                            <button onclick="event.stopPropagation(); openEditBeritaModal(${b.id})" class="text-[9px] text-amber-700 font-bold hover:underline">Edit</button>
+                                            <button onclick="event.stopPropagation(); deleteBerita(${b.id})" class="text-[9px] text-rose-600 font-bold hover:underline">Hapus</button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Agenda Terdekat (Dilengkapi Edit & Hapus per Agenda)
             const agendaEl = document.getElementById('agendaContainer');
             if (agendaEl) {
-                agendaEl.innerHTML = AppState.agenda.map((ag, idx) => `
-                    <div class="flex-shrink-0 w-48 p-3 rounded-2xl bg-amber-50/70 border border-amber-200 snap-start shadow-xs relative">
-                        <span class="text-[9px] font-extrabold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded"><i class="fa-solid fa-calendar-check mr-1"></i>${ag.tanggal}</span>
-                        <h5 class="font-bold text-xs text-slate-900 mt-1.5 leading-snug line-clamp-2">${ag.judul}</h5>
-                        <span class="text-[9px] text-slate-500 font-medium mt-1 block truncate"><i class="fa-solid fa-location-dot mr-1 text-emerald-600"></i>${ag.lokasi}</span>
-                        ${AppState.editMode && AppState.activeRole === 'Super Admin' ? `
-                            <button onclick="deleteAgenda(${idx})" class="absolute top-2 right-2 text-rose-500 hover:text-rose-700 text-[10px] p-1" title="Hapus">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('');
+                if (!AppState.agenda || AppState.agenda.length === 0) {
+                    agendaEl.innerHTML = `<div class="p-3 text-[11px] text-slate-400 italic">Belum ada jadwal agenda terdekat.</div>`;
+                } else {
+                    agendaEl.innerHTML = AppState.agenda.map((ag, idx) => `
+                        <div class="flex-shrink-0 w-48 p-3 rounded-2xl bg-amber-50/70 border border-amber-200 snap-start shadow-xs relative flex flex-col justify-between">
+                            <div>
+                                <span class="text-[9px] font-extrabold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded"><i class="fa-solid fa-calendar-check mr-1"></i>${ag.tanggal}</span>
+                                <h5 class="font-bold text-xs text-slate-900 mt-1.5 leading-snug line-clamp-2">${ag.judul}</h5>
+                                <span class="text-[9px] text-slate-500 font-medium mt-1 block truncate"><i class="fa-solid fa-location-dot mr-1 text-emerald-600"></i>${ag.lokasi}</span>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="pt-2 mt-2 border-t border-amber-200/80 flex items-center space-x-1">
+                                    <button onclick="openEditAgendaModal(${idx})" class="flex-1 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-[9px] flex items-center justify-center" title="Edit Agenda">
+                                        <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                    </button>
+                                    <button onclick="deleteAgenda(${idx})" class="flex-1 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[9px] flex items-center justify-center" title="Hapus Agenda">
+                                        <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
             }
 
             // Kontak & Layanan
@@ -7208,6 +7364,704 @@
             AppState.agenda.splice(idx, 1);
             renderSchoolProfile();
             showToast("Agenda dihapus", "info");
+        }
+
+        /* ===================================================
+           FITUR LENGKAP INPUT BARU, EDIT, & HAPUS INFO SEKOLAH (ADMIN)
+           =================================================== */
+
+        // 1A. INPUT BARU INFORMASI PROFIL SEKOLAH
+        function openAddProfileModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Input Baru Informasi Profil Sekolah", "fa-plus");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <p class="text-[11px] text-slate-600">Tambahkan informasi baru pada bagian Profil Sekolah (atau isi ulang data profil):</p>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Judul Bagian / Informasi Profil Baru</label>
+                        <input id="inpExtraProfJudul" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" placeholder="Contoh: SK Pendirian / Identitas Yayasan / Waktu Belajar">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Isi Keterangan Lengkap</label>
+                        <textarea id="inpExtraProfIsi" rows="3" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Masukkan isi informasi profil tambahan..."></textarea>
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const judul = document.getElementById('inpExtraProfJudul').value.trim();
+                const isi = document.getElementById('inpExtraProfIsi').value.trim();
+                if (!judul || !isi) {
+                    showToast("Judul dan isi informasi profil wajib diisi!", "error");
+                    return;
+                }
+                if (!AppState.profile.extraItems) AppState.profile.extraItems = [];
+                AppState.profile.extraItems.push({ judul, isi });
+                renderSchoolProfile();
+                closeModal();
+                showToast("Informasi profil baru berhasil ditambahkan!", "success");
+            };
+            openModal();
+        }
+
+        // 1B. EDIT ITEM TAMBAHAN PROFIL SEKOLAH
+        function openEditProfileExtraItemModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const list = AppState.profile.extraItems || [];
+            const item = list[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Informasi Tambahan Profil", "fa-pen");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Judul Bagian</label>
+                        <input id="inpEditExtraProfJudul" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.judul}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Isi Keterangan</label>
+                        <textarea id="inpEditExtraProfIsi" rows="3" class="w-full p-2 rounded-xl border border-slate-300 text-xs">${item.isi}</textarea>
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const judul = document.getElementById('inpEditExtraProfJudul').value.trim();
+                const isi = document.getElementById('inpEditExtraProfIsi').value.trim();
+                if (!judul || !isi) {
+                    showToast("Judul dan isi wajib diisi!", "error");
+                    return;
+                }
+                item.judul = judul;
+                item.isi = isi;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Informasi profil berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        function deleteProfileExtraItem(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            if (!AppState.profile.extraItems) return;
+            AppState.profile.extraItems.splice(idx, 1);
+            renderSchoolProfile();
+            showToast("Informasi tambahan profil berhasil dihapus!", "info");
+        }
+
+        // 1C. HAPUS BAGIAN PROFIL SEKOLAH
+        function openDeleteProfileModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Hapus Data Profil Sekolah", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Bagian Terpilih';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <p class="text-[11px] text-slate-600">Pilih bagian data Profil Sekolah yang ingin dihapus / dikosongkan:</p>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelProfMotto" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Motto Lembaga</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelProfAlamat" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Alamat Lengkap</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelProfSejarah" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Sejarah Singkat</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelProfExtra" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Semua Informasi Tambahan Profil</span>
+                    </label>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                if (document.getElementById('chkDelProfMotto')?.checked) AppState.profile.motto = "";
+                if (document.getElementById('chkDelProfAlamat')?.checked) AppState.profile.alamat = "-";
+                if (document.getElementById('chkDelProfSejarah')?.checked) AppState.profile.sejarah = "-";
+                if (document.getElementById('chkDelProfExtra')?.checked) AppState.profile.extraItems = [];
+                renderSchoolProfile();
+                closeModal();
+                showToast("Bagian profil terpilih berhasil dihapus!", "info");
+            };
+            openModal();
+        }
+
+        // 2A. INPUT BARU VISI / POIN MISI
+        function openAddVisiMisiItemModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Input Baru Misi / Visi Lembaga", "fa-plus");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tambah Poin Misi Baru</label>
+                        <textarea id="inpNewSingleMisi" rows="3" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Ketik butir misi baru yang ingin ditambahkan..."></textarea>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200">
+                        <label class="block font-bold text-slate-700 mb-1">Atau Perbarui Visi Utama (Opsional)</label>
+                        <textarea id="inpUpdateVisiOpt" rows="2" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Kosongkan jika tidak ingin mengubah visi...">${AppState.visiMisi.visi}</textarea>
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const newMisi = document.getElementById('inpNewSingleMisi').value.trim();
+                const newVisi = document.getElementById('inpUpdateVisiOpt').value.trim();
+                if (!AppState.visiMisi.misi) AppState.visiMisi.misi = [];
+                if (newMisi) {
+                    AppState.visiMisi.misi.push(newMisi);
+                }
+                if (newVisi) {
+                    AppState.visiMisi.visi = newVisi;
+                }
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data Visi & Misi baru berhasil ditambahkan!", "success");
+            };
+            openModal();
+        }
+
+        // 2B. EDIT SATU POIN MISI YANG SUDAH DIINPUT
+        function openEditSingleMisiModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const currentMisi = AppState.visiMisi.misi[idx];
+            if (typeof currentMisi === 'undefined') return;
+
+            setModalTitle(`Edit Misi Nomor ${idx + 1}`, "fa-pen");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Isi Poin Misi Ke-${idx + 1}</label>
+                    <textarea id="inpEditSingleMisiText" rows="3" class="w-full p-2 rounded-xl border border-slate-300 text-xs">${currentMisi}</textarea>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const val = document.getElementById('inpEditSingleMisiText').value.trim();
+                if (!val) {
+                    showToast("Isi misi tidak boleh kosong!", "error");
+                    return;
+                }
+                AppState.visiMisi.misi[idx] = val;
+                renderSchoolProfile();
+                closeModal();
+                showToast(`Misi ke-${idx + 1} berhasil diperbarui!`, "success");
+            };
+            openModal();
+        }
+
+        // 2C. HAPUS SATU POIN MISI ATAU HAPUS VISI & MISI
+        function deleteSingleMisiItem(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            AppState.visiMisi.misi.splice(idx, 1);
+            renderSchoolProfile();
+            showToast(`Misi ke-${idx + 1} berhasil dihapus!`, "info");
+        }
+
+        function openDeleteVisiMisiModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Hapus Data Visi & Misi", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Data Terpilih';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <p class="text-[11px] text-slate-600">Pilih bagian Visi &amp; Misi yang ingin dihapus:</p>
+                    <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelVisiText" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Kosongkan Teks Visi Utama</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelAllMisi" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Seluruh Daftar Misi (${(AppState.visiMisi.misi || []).length} Poin)</span>
+                    </label>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                if (document.getElementById('chkDelVisiText')?.checked) AppState.visiMisi.visi = "";
+                if (document.getElementById('chkDelAllMisi')?.checked) AppState.visiMisi.misi = [];
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data Visi & Misi terpilih berhasil dihapus!", "info");
+            };
+            openModal();
+        }
+
+        // 3. EDIT PENGURUS STRUKTUR ORGANISASI YANG SUDAH DIINPUT
+        function openEditOrgModal(id) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const member = (AppState.organisasi || []).find(o => o.id === id);
+            if (!member) return;
+
+            setModalTitle("Edit Pengurus Struktur Organisasi", "fa-user-pen");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            let tempFoto = member.foto;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Lengkap &amp; Gelar</label>
+                        <input id="inpEditOrgNama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${member.nama}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Jabatan Struktural</label>
+                        <input id="inpEditOrgJabatan" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${member.jabatan}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Peran / Bidang</label>
+                        <input id="inpEditOrgRole" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${member.role}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ganti Foto Pengurus (Dari Galeri HP)</label>
+                        <div class="flex items-center space-x-2.5">
+                            <img id="prevEditOrgImg" src="${tempFoto}" class="w-12 h-12 rounded-xl object-cover border border-slate-300">
+                            <input type="file" id="inpEditOrgFotoFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const fileInp = document.getElementById('inpEditOrgFotoFile');
+            if (fileInp) {
+                fileInp.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            tempFoto = evt.target.result;
+                            const prev = document.getElementById('prevEditOrgImg');
+                            if (prev) prev.src = tempFoto;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+            }
+
+            AppState.currentModalHandler = () => {
+                const nama = document.getElementById('inpEditOrgNama').value.trim();
+                const jabatan = document.getElementById('inpEditOrgJabatan').value.trim();
+                const role = document.getElementById('inpEditOrgRole').value.trim();
+                if (!nama || !jabatan) {
+                    showToast("Nama dan Jabatan wajib diisi!", "error");
+                    return;
+                }
+                member.nama = nama;
+                member.jabatan = jabatan;
+                member.role = role || jabatan;
+                member.foto = tempFoto;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data pengurus berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        // 4A. INPUT BARU, EDIT, & HAPUS DATA AKADEMIK TAMBAHAN
+        function openAddAkademikInfoModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Input Baru Data Akademik", "fa-plus");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <p class="text-[11px] text-slate-600">Tambahkan informasi program akademik baru:</p>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Label Program / Kategori Akademik</label>
+                        <input id="inpNewAkadLabel" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" placeholder="Contoh: Program Bahasa / Target Lulusan / Jam KBM">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Isi / Keterangan Akademik</label>
+                        <input id="inpNewAkadNilai" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: Dwibahasa Aktif (Arab & Inggris)">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const label = document.getElementById('inpNewAkadLabel').value.trim();
+                const nilai = document.getElementById('inpNewAkadNilai').value.trim();
+                if (!label || !nilai) {
+                    showToast("Label dan keterangan akademik wajib diisi!", "error");
+                    return;
+                }
+                if (!AppState.akademik.extraItems) AppState.akademik.extraItems = [];
+                AppState.akademik.extraItems.push({ label, nilai });
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data akademik baru berhasil ditambahkan!", "success");
+            };
+            openModal();
+        }
+
+        function openEditAkademikExtraModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.akademik.extraItems || [])[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Informasi Akademik", "fa-pen");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Label Program Akademik</label>
+                        <input id="inpEditAkadLabel" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.label}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Isi / Keterangan</label>
+                        <input id="inpEditAkadNilai" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.nilai}">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const label = document.getElementById('inpEditAkadLabel').value.trim();
+                const nilai = document.getElementById('inpEditAkadNilai').value.trim();
+                if (!label || !nilai) return;
+                item.label = label;
+                item.nilai = nilai;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Informasi akademik berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        function deleteAkademikExtraItem(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            if (!AppState.akademik.extraItems) return;
+            AppState.akademik.extraItems.splice(idx, 1);
+            renderSchoolProfile();
+            showToast("Item akademik berhasil dihapus!", "info");
+        }
+
+        function openDeleteAkademikModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            setModalTitle("Hapus Data Akademik", "fa-trash");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Hapus Data Terpilih';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-[11px] text-slate-600">Pilih bagian Data Akademik yang ingin dihapus / dikosongkan:</p>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelAkadKur" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Kosongkan Kurikulum Utama</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelAkadUnggul" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Kosongkan Keunggulan Utama</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                        <input type="checkbox" id="chkDelAkadExtra" class="w-4 h-4 text-rose-600 rounded">
+                        <span class="text-xs font-bold text-slate-800">Hapus Semua Item Tambahan Akademik</span>
+                    </label>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                if (document.getElementById('chkDelAkadKur')?.checked) AppState.akademik.kurikulum = "-";
+                if (document.getElementById('chkDelAkadUnggul')?.checked) AppState.akademik.keunggulan = "-";
+                if (document.getElementById('chkDelAkadExtra')?.checked) AppState.akademik.extraItems = [];
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data akademik terpilih berhasil dihapus!", "info");
+            };
+            openModal();
+        }
+
+        // 4B. EDIT EKSTRAKURIKULER YANG SUDAH DIINPUT
+        function openEditEkskulModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.akademik.ekskul || [])[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Ekstrakurikuler Santri", "fa-pen");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Kegiatan Ekskul</label>
+                        <input id="inpEditEkskulNama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.nama}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ikon FontAwesome</label>
+                        <input id="inpEditEkskulIcon" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.icon || 'fa-star'}">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const nama = document.getElementById('inpEditEkskulNama').value.trim();
+                const icon = document.getElementById('inpEditEkskulIcon').value.trim() || 'fa-star';
+                if (!nama) {
+                    showToast("Nama ekskul wajib diisi!", "error");
+                    return;
+                }
+                item.nama = nama;
+                item.icon = icon;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data ekstrakurikuler berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        // 5. EDIT PRESTASI SISWA & PENDIDIK YANG SUDAH DIINPUT
+        function openEditPrestasiModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.akademik.prestasi || [])[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Prestasi Siswa & Pendidik", "fa-trophy");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Judul Kejuaraan / Prestasi</label>
+                        <input id="inpEditPresJudul" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.judul}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Pemenang (Siswa / Pendidik)</label>
+                        <input id="inpEditPresPemenang" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.pemenang}">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Tingkatan</label>
+                            <input id="inpEditPresTingkat" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.tingkat}">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Tahun</label>
+                            <input id="inpEditPresTahun" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.tahun}">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const judul = document.getElementById('inpEditPresJudul').value.trim();
+                const pemenang = document.getElementById('inpEditPresPemenang').value.trim();
+                const tingkat = document.getElementById('inpEditPresTingkat').value.trim() || 'Nasional';
+                const tahun = document.getElementById('inpEditPresTahun').value.trim() || '2026';
+                if (!judul || !pemenang) {
+                    showToast("Judul dan pemenang wajib diisi!", "error");
+                    return;
+                }
+                item.judul = judul;
+                item.pemenang = pemenang;
+                item.tingkat = tingkat;
+                item.tahun = tahun;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data prestasi berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        // 6. EDIT SARANA & PRASARANA YANG SUDAH DIINPUT
+        function openEditSarprasModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.sarpras || [])[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Sarana & Prasarana", "fa-building");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Fasilitas</label>
+                        <input id="inpEditSarNama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.nama}">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Kuantitas / Jumlah</label>
+                            <input id="inpEditSarJumlah" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.jumlah}">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Ikon FontAwesome</label>
+                            <input id="inpEditSarIcon" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.icon || 'fa-building'}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Deskripsi Fasilitas</label>
+                        <input id="inpEditSarDesk" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.desk}">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const nama = document.getElementById('inpEditSarNama').value.trim();
+                const jumlah = document.getElementById('inpEditSarJumlah').value.trim() || '1 Unit';
+                const icon = document.getElementById('inpEditSarIcon').value.trim() || 'fa-building';
+                const desk = document.getElementById('inpEditSarDesk').value.trim() || '';
+                if (!nama) {
+                    showToast("Nama fasilitas wajib diisi!", "error");
+                    return;
+                }
+                item.nama = nama;
+                item.jumlah = jumlah;
+                item.icon = icon;
+                item.desk = desk;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Data sarana & prasarana berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        // 7A. EDIT BERITA SEKOLAH YANG SUDAH DIINPUT
+        function openEditBeritaModal(id) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.berita || []).find(b => b.id === id);
+            if (!item) return;
+
+            setModalTitle("Edit Berita Kegiatan", "fa-newspaper");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            let tempFoto = item.foto;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Judul Berita</label>
+                        <input id="inpEditBerJudul" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.judul}">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Kategori</label>
+                            <input id="inpEditBerKategori" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.kategori}">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Tanggal</label>
+                            <input id="inpEditBerTanggal" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.tanggal}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Penulis / Sumber</label>
+                        <input id="inpEditBerPenulis" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.penulis || 'Tim Humas ELWA Pesantren'}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ringkasan Singkat</label>
+                        <textarea id="inpEditBerRingkasan" rows="2" class="w-full p-2 rounded-xl border border-slate-300 text-xs">${item.ringkasan || ''}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Isi Berita Lengkap</label>
+                        <textarea id="inpEditBerIsiLengkap" rows="4" class="w-full p-2 rounded-xl border border-slate-300 text-xs">${item.isiLengkap || item.ringkasan || ''}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ganti Foto Berita (Dari Galeri HP)</label>
+                        <div class="flex items-center space-x-2.5">
+                            <img id="prevEditBerImg" src="${tempFoto}" class="w-16 h-12 rounded-xl object-cover border border-slate-300">
+                            <input type="file" id="inpEditBerFotoFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const fileInp = document.getElementById('inpEditBerFotoFile');
+            if (fileInp) {
+                fileInp.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            tempFoto = evt.target.result;
+                            const prev = document.getElementById('prevEditBerImg');
+                            if (prev) prev.src = tempFoto;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+            }
+
+            AppState.currentModalHandler = () => {
+                const judul = document.getElementById('inpEditBerJudul').value.trim();
+                const kategori = document.getElementById('inpEditBerKategori').value.trim() || 'Umum';
+                const tanggal = document.getElementById('inpEditBerTanggal').value.trim() || 'Hari Ini';
+                const penulis = document.getElementById('inpEditBerPenulis').value.trim() || 'Tim Humas ELWA';
+                const ringkasan = document.getElementById('inpEditBerRingkasan').value.trim() || '';
+                const isiLengkap = document.getElementById('inpEditBerIsiLengkap').value.trim() || ringkasan;
+                if (!judul) {
+                    showToast("Judul berita wajib diisi!", "error");
+                    return;
+                }
+                item.judul = judul;
+                item.kategori = kategori;
+                item.tanggal = tanggal;
+                item.penulis = penulis;
+                item.ringkasan = ringkasan || isiLengkap;
+                item.isiLengkap = isiLengkap || ringkasan;
+                item.foto = tempFoto;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Berita berhasil diperbarui!", "success");
+            };
+            openModal();
+        }
+
+        // 7B. EDIT AGENDA SEKOLAH YANG SUDAH DIINPUT
+        function openEditAgendaModal(idx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const item = (AppState.agenda || [])[idx];
+            if (!item) return;
+
+            setModalTitle("Edit Agenda Terdekat", "fa-calendar-check");
+            document.getElementById('modalSaveBtn').style.display = 'block';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-2.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Agenda / Kegiatan</label>
+                        <input id="inpEditAgJudul" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold" value="${item.judul}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal &amp; Waktu</label>
+                        <input id="inpEditAgTanggal" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.tanggal}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Lokasi Pelaksanaan</label>
+                        <input id="inpEditAgLokasi" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.lokasi}">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const judul = document.getElementById('inpEditAgJudul').value.trim();
+                const tanggal = document.getElementById('inpEditAgTanggal').value.trim();
+                const lokasi = document.getElementById('inpEditAgLokasi').value.trim() || 'Kompleks Pesantren';
+                if (!judul || !tanggal) {
+                    showToast("Nama agenda dan tanggal wajib diisi!", "error");
+                    return;
+                }
+                item.judul = judul;
+                item.tanggal = tanggal;
+                item.lokasi = lokasi;
+                renderSchoolProfile();
+                closeModal();
+                showToast("Agenda berhasil diperbarui!", "success");
+            };
+            openModal();
         }
 
         function openEditKontakModal() {
@@ -8483,6 +9337,9 @@
                 "addNewMapelToSemester",
                 "addNewKitabToSemester",
                 "addNewPeminatanToSemester",
+                "deleteProfileExtraItem",
+                "deleteSingleMisiItem",
+                "deleteAkademikExtraItem",
                 "deleteOrgMember",
                 "deleteEkskulItem",
                 "deletePrestasiItem",
