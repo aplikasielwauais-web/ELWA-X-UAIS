@@ -4424,6 +4424,7 @@
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 closeModal();
                 showToast(`Foto profil ${child.nama} berhasil diperbarui!`, "success");
+                ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Foto Profil Santri", `Foto profil identitas ananda ${child.nama} telah diperbarui oleh Admin.`, "capaian");
             };
 
             openModal();
@@ -4749,6 +4750,7 @@
                 renderDashboard();
                 closeModal();
                 showToast(`Santri baru "${nama}" berhasil ditambahkan & disimpan ke Supabase!`, "success");
+                ElwaNotificationManager.notifySchoolUpdate("Data Santri Baru", `Santri baru atas nama ${nama} (${kelas}) telah terdaftar di ${AppState.profile.nama}`, "sec-profil");
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
                     ElwaSupabaseDB.syncToSupabase(true);
@@ -4826,6 +4828,7 @@
                 }
 
                 showToast(`Data santri "${deletedName}" (${reason}) berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Santri", `Data santri ${deletedName} (${reason}) telah diperbarui oleh Admin`, "sec-profil");
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
                     ElwaSupabaseDB.deleteStudentFromSupabase(deletedNis);
@@ -5376,6 +5379,7 @@
             if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
             openKelolaAkumulasiPosModal(posIdx, cIdx);
             showToast("Catatan cicilan dihapus & sisa tagihan diperbarui", "info");
+            ElwaNotificationManager.notifyStudentUpdate(cIdx, `Keuangan (${p.pos})`, `Riwayat cicilan ${p.pos} diperbarui. Sisa tagihan saat ini: ${formatNumberToRupiah(p.sisaTagihan)}.`, "keuangan");
         }
         // MODAL 4: CATAT PELANGGARAN + BUKTI FOTO (ADMIN, GURU / MUSYRIF, & EVALUATOR)
         let tempPelanggaranPhotoData = null;
@@ -5719,6 +5723,7 @@
                 syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 showToast(`Kategori diubah menjadi Pelanggaran ${newTingkat}`, "info");
+                ElwaNotificationManager.notifyStudentUpdate(idx, "Evaluasi Kedisiplinan", `Kategori catatan kedisiplinan "${item.kasus}" (${item.tgl}) diperbarui menjadi tingkat ${newTingkat}.`, "pelanggaran");
             }
         }
 
@@ -5735,6 +5740,7 @@
                 syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 showToast("Status penanganan diperbarui", "info");
+                ElwaNotificationManager.notifyStudentUpdate(idx, "Status Pembinaan Kedisiplinan", `Status catatan "${item.kasus}" (${item.tgl}) diperbarui menjadi: ${item.tertangani ? "Sudah Tertangani & Dibina" : "Perlu Tindak Lanjut"}.`, "pelanggaran");
             }
         }
 
@@ -5748,6 +5754,7 @@
             syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
             if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
             showToast("Catatan pelanggaran dihapus", "info");
+            ElwaNotificationManager.notifyStudentUpdate(idx, "Evaluasi Kedisiplinan", `Data riwayat catatan kedisiplinan ananda ${child.nama} telah diperbarui.`, "pelanggaran");
         }
 
         // MODAL 5: INPUT / EDIT CAPAIAN NILAI PER PILAR (GURU & ADMIN)
@@ -6057,6 +6064,7 @@
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 closeModal();
                 showToast(`Periode ${newLabel} berhasil ditambahkan!`, "success");
+                ElwaNotificationManager.notifySchoolUpdate("Periode Semester Baru", `Periode akademik ${newLabel} telah dibuka`, "sec-akademik");
             };
             openModal();
         }
@@ -6154,6 +6162,7 @@
             syncChildHafalanFromLatest(child);
             renderChildPortal();
             showToast("Riwayat hafalan dihapus & data disinkronkan", "info");
+            ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Riwayat Hafalan Al-Qur'an", `Data riwayat setoran hafalan ananda ${child.nama} telah diperbarui.`, "hafalan");
         }
 
         /* ===================================================
@@ -8376,6 +8385,7 @@
                 renderChildPortal();
                 closeModal();
                 showToast("Data santri pegangan Musyrif berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembagian Musyrif Asrama", `Data pembagian Musyrif & Santri Pegangan telah diperbarui`, "sec-organisasi");
             };
             openModal();
         }
@@ -9042,6 +9052,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Banner sekolah berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Banner Sekolah", `Foto banner utama ${AppState.profile.nama} telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9083,6 +9094,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Logo sekolah berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Logo Sekolah", `Logo resmi ${AppState.profile.nama} telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9349,6 +9361,7 @@
             AppState.sarpras.splice(idx, 1);
             renderSchoolProfile();
             showToast(`Sarpras "${removed ? removed.nama : ''}" berhasil dihapus!`, "info");
+            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Fasilitas "${removed ? removed.nama : 'Sarpras'}" telah diperbarui oleh Admin`, "sec-sarpras");
         }
 
         function openAddBeritaModal() {
@@ -9600,6 +9613,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Informasi profil berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Informasi profil "${judul}" telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9610,6 +9624,7 @@
             AppState.profile.extraItems.splice(idx, 1);
             renderSchoolProfile();
             showToast("Informasi tambahan profil berhasil dihapus!", "info");
+            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Data informasi tambahan pada Profil Sekolah telah diperbarui`, "sec-profil");
         }
 
         // 1C. HAPUS BAGIAN PROFIL SEKOLAH
@@ -9652,6 +9667,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Bagian profil terpilih berhasil dihapus!", "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Data pada bagian Profil Sekolah telah diperbarui oleh Admin`, "sec-profil");
             };
             openModal();
         }
@@ -9719,6 +9735,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`Misi ke-${idx + 1} berhasil diperbarui!`, "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Butir Misi ke-${idx + 1} lembaga telah diperbarui`, "sec-visi");
             };
             openModal();
         }
@@ -9729,6 +9746,7 @@
             AppState.visiMisi.misi.splice(idx, 1);
             renderSchoolProfile();
             showToast(`Misi ke-${idx + 1} berhasil dihapus!`, "info");
+            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Daftar Misi lembaga telah diperbarui oleh Admin`, "sec-visi");
         }
 
         function openDeleteVisiMisiModal() {
@@ -9760,6 +9778,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data Visi & Misi terpilih berhasil dihapus!", "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Bagian Visi & Misi lembaga telah diperbarui oleh Admin`, "sec-visi");
             };
             openModal();
         }
@@ -9866,6 +9885,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data akademik baru berhasil ditambahkan!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Informasi Akademik Baru", `Program akademik "${label}: ${nilai}" telah ditambahkan`, "sec-akademik");
             };
             openModal();
         }
@@ -9900,6 +9920,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Informasi akademik berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Informasi Akademik", `Program akademik "${label}" telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -9910,6 +9931,7 @@
             AppState.akademik.extraItems.splice(idx, 1);
             renderSchoolProfile();
             showToast("Item akademik berhasil dihapus!", "info");
+            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Akademik", `Data informasi tambahan akademik telah diperbarui`, "sec-akademik");
         }
 
         function openDeleteAkademikModal() {
@@ -9946,6 +9968,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data akademik terpilih berhasil dihapus!", "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Akademik", `Bagian informasi akademik telah diperbarui oleh Admin`, "sec-akademik");
             };
             openModal();
         }
@@ -9984,6 +10007,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data ekstrakurikuler berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Ekstrakurikuler", `Kegiatan ekstrakurikuler "${nama}" telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10036,6 +10060,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data prestasi berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Prestasi", `Data prestasi "${judul}" (${pemenang}) telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10088,6 +10113,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data sarana & prasarana berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Fasilitas "${nama}" (${jumlah}) telah diperbarui`, "sec-sarpras");
             };
             openModal();
         }
@@ -10300,6 +10326,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIds.length} pengurus berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Struktur Organisasi", `Susunan pengurus struktur organisasi telah diperbarui`, "sec-organisasi");
             };
             openModal();
         }
@@ -10364,6 +10391,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} ekstrakurikuler berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Ekstrakurikuler", `Daftar kegiatan ekstrakurikuler santri telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10434,6 +10462,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} prestasi berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Prestasi", `Daftar prestasi siswa & pendidik telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10504,6 +10533,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} fasilitas berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Daftar fasilitas sarana & prasarana sekolah telah diperbarui`, "sec-sarpras");
             };
             openModal();
         }
@@ -10574,6 +10604,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIds.length} berita berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Berita Sekolah", `Daftar kabar & berita kegiatan sekolah telah diperbarui`, "sec-berita");
             };
             openModal();
         }
@@ -10644,6 +10675,7 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} agenda berhasil dihapus!`, "info");
+                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Agenda Sekolah", `Jadwal agenda kegiatan terdekat telah diperbarui`, "sec-berita");
             };
             openModal();
         }
@@ -11017,6 +11049,7 @@
                 openUbahStatusUangJajanModal();
             }
             showToast("Catatan penggunaan uang jajan dihapus", "info");
+            ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Riwayat Penggunaan Uang Jajan", `Daftar riwayat penggunaan uang jajan ananda ${child.nama} telah diperbarui.`, "keuangan");
         }
 
         function openBayarTagihanModal(posName, nominal) {
@@ -11197,6 +11230,7 @@
                 renderChildPortal();
                 closeModal();
                 showToast("Link WhatsApp Musyrif berhasil diperbarui!", "success");
+                ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Kontak Musyrif Asrama", `Informasi Musyrif pembina asrama (${child.musyrif}) untuk ananda ${child.nama} telah diperbarui.`, "catatan");
             };
             openModal();
         }
@@ -11971,6 +12005,9 @@
 
                 this.isFetching = true;
                 try {
+                    const prevSnap = JSON.parse(JSON.stringify(this.getSnapshot()));
+                    const prevHash = this.lastSyncedHash || JSON.stringify(prevSnap);
+
                     const { data, error } = await this.client
                         .from(SUPABASE_CONFIG.mainTable)
                         .select("*")
@@ -11992,13 +12029,16 @@
                         this.applyDatabaseRecord(data);
                         const newSnap = this.getSnapshot();
                         const newHash = JSON.stringify(newSnap);
-                        if (isInitialLoad || newHash !== this.lastSyncedHash) {
+                        const hasChanged = newHash !== prevHash;
+
+                        if (isInitialLoad || hasChanged) {
                             this.lastSyncedHash = newHash;
                             this.saveLocalBackup(newSnap);
                             renderDashboard();
-                            if (!isInitialLoad && typeof ElwaNotificationManager !== 'undefined') {
-                                ElwaNotificationManager.checkIncomingRemoteNotifications();
-                            }
+                        }
+
+                        if (typeof ElwaNotificationManager !== 'undefined') {
+                            ElwaNotificationManager.checkIncomingRemoteNotifications(prevSnap, newSnap, isInitialLoad, hasChanged);
                         }
                     } else if (isInitialLoad) {
                         // Tabel di Supabase masih kosong: simpan seluruh data awal ke Supabase (Auto-Seed)
@@ -12012,25 +12052,13 @@
                 }
             },
 
-            // Cek secara ringan apakah ada pembaruan dari perangkat lain berdasarkan updated_at
+            // Cek pembaruan dari perangkat lain secara langsung ke tabel utama
             async checkRemoteUpdate() {
                 if (!this.client || !this.isConfigured || !this.isReady || this.isSyncing || this.isFetching) {
                     return;
                 }
                 try {
-                    const { data, error } = await this.client
-                        .from(SUPABASE_CONFIG.mainTable)
-                        .select("updated_at")
-                        .eq("id", SUPABASE_CONFIG.recordId)
-                        .maybeSingle();
-
-                    if (!error && data && data.updated_at) {
-                        if (this.lastRemoteUpdatedAt && data.updated_at !== this.lastRemoteUpdatedAt) {
-                            await this.fetchFromSupabase(false);
-                        } else if (!this.lastRemoteUpdatedAt) {
-                            this.lastRemoteUpdatedAt = data.updated_at;
-                        }
-                    }
+                    await this.fetchFromSupabase(false);
                 } catch (err) {}
             },
 
@@ -12272,9 +12300,29 @@
                     this.checkRemoteUpdate();
                 });
 
+                document.addEventListener("resume", () => {
+                    this.checkRemoteUpdate();
+                }, false);
+
                 document.addEventListener("visibilitychange", () => {
                     if (document.visibilityState === "visible") {
                         this.checkRemoteUpdate();
+                    }
+                });
+
+                window.addEventListener("storage", (ev) => {
+                    if (ev && ev.key === SUPABASE_CONFIG.localCacheKey && ev.newValue) {
+                        try {
+                            const prevSnap = JSON.parse(JSON.stringify(this.getSnapshot()));
+                            const parsed = JSON.parse(ev.newValue);
+                            this.applyDatabaseRecord({ payload: parsed });
+                            const newSnap = this.getSnapshot();
+                            this.lastSyncedHash = JSON.stringify(newSnap);
+                            renderDashboard();
+                            if (typeof ElwaNotificationManager !== 'undefined') {
+                                ElwaNotificationManager.checkIncomingRemoteNotifications(prevSnap, newSnap, false, true);
+                            }
+                        } catch (e) {}
                     }
                 });
             }
@@ -12362,17 +12410,240 @@
         let headsUpTimer = null;
         let currentHeadsUpNotifObj = null;
 
-        const ElwaNotificationManager = {
-            lastSeenNotifId: 1730000002,
+        /* ===================================================================
+           MESIN SUARA NOTIFIKASI ANDROID APK & WEBVIEW (WAV + WEB AUDIO API)
+           Menjamin suara notifikasi berbunyi nyaring di HP Android meskipun
+           dibungkus menjadi APK (WebView / Website2APK / WebIntoApp / Cordova)
+           =================================================================== */
+        const ElwaAudioNotifEngine = {
+            audioCtx: null,
+            wavDataUri: null,
+            audioEl: null,
+            isUnlocked: false,
 
             init() {
-                this.syncBadgeCount();
-                const feed = AppState.notificationsFeed || [];
-                if (feed.length > 0 && feed[0].id > this.lastSeenNotifId) {
-                    this.lastSeenNotifId = feed[0].id;
-                }
+                this.buildNotificationWavDataUri();
+                this.ensureAudioElement();
+                this.setupAutoUnlockOnTouch();
+            },
 
-                // Minta izin notifikasi HP secara otomatis pada interaksi pertama jika didukung browser/HP
+            // Buat file audio .WAV 16-bit PCM asli di memori (Nada Lonceng Kristal 3-Nada khas Notifikasi HP Android)
+            buildNotificationWavDataUri() {
+                if (this.wavDataUri) return this.wavDataUri;
+                try {
+                    const sampleRate = 22050;
+                    const durationSec = 1.15;
+                    const numSamples = Math.floor(sampleRate * durationSec);
+                    const buffer = new ArrayBuffer(44 + numSamples * 2);
+                    const view = new DataView(buffer);
+
+                    const writeStr = (offset, str) => {
+                        for (let i = 0; i < str.length; i++) {
+                            view.setUint8(offset + i, str.charCodeAt(i));
+                        }
+                    };
+
+                    writeStr(0, "RIFF");
+                    view.setUint32(4, 36 + numSamples * 2, true);
+                    writeStr(8, "WAVE");
+                    writeStr(12, "fmt ");
+                    view.setUint32(16, 16, true);
+                    view.setUint16(20, 1, true); // PCM
+                    view.setUint16(22, 1, true); // Mono
+                    view.setUint32(24, sampleRate, true);
+                    view.setUint32(28, sampleRate * 2, true);
+                    view.setUint16(32, 2, true);
+                    view.setUint16(34, 16, true);
+                    writeStr(36, "data");
+                    view.setUint32(40, numSamples * 2, true);
+
+                    // 3-note crystal smartphone chime: Note 1 (0.0s: 880Hz A5), Note 2 (0.16s: 1174.66Hz D6), Note 3 (0.32s: 1760Hz A6)
+                    const notes = [
+                        { start: 0.0, freq: 880.0, decay: 7.5, amp: 0.55 },
+                        { start: 0.15, freq: 1174.66, decay: 7.0, amp: 0.60 },
+                        { start: 0.30, freq: 1760.0, decay: 4.2, amp: 0.75 },
+                        { start: 0.62, freq: 1318.51, decay: 7.0, amp: 0.45 },
+                        { start: 0.76, freq: 1760.0, decay: 4.5, amp: 0.65 }
+                    ];
+
+                    for (let i = 0; i < numSamples; i++) {
+                        const t = i / sampleRate;
+                        let sample = 0;
+                        for (let n = 0; n < notes.length; n++) {
+                            const nt = notes[n];
+                            if (t >= nt.start) {
+                                const dt = t - nt.start;
+                                const env = Math.min(1, dt / 0.006) * Math.exp(-dt * nt.decay);
+                                // Fundamental + harmonic overtone for clear bell timbre
+                                sample += env * nt.amp * (
+                                    0.72 * Math.sin(2 * Math.PI * nt.freq * dt) +
+                                    0.28 * Math.sin(2 * Math.PI * (nt.freq * 2) * dt)
+                                );
+                            }
+                        }
+                        sample = Math.max(-0.98, Math.min(0.98, sample));
+                        view.setInt16(44 + i * 2, Math.floor(sample * 32767), true);
+                    }
+
+                    const bytes = new Uint8Array(buffer);
+                    let binary = "";
+                    const chunkSize = 8192;
+                    for (let i = 0; i < bytes.length; i += chunkSize) {
+                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+                    }
+                    this.wavDataUri = "data:audio/wav;base64," + btoa(binary);
+                } catch (err) {
+                    console.warn("[ELWA Audio] Gagal membuat WAV:", err);
+                }
+                return this.wavDataUri;
+            },
+
+            ensureAudioElement() {
+                if (this.audioEl) return this.audioEl;
+                try {
+                    let el = document.getElementById("elwaHiddenNotifAudio");
+                    if (!el) {
+                        el = document.createElement("audio");
+                        el.id = "elwaHiddenNotifAudio";
+                        el.preload = "auto";
+                        el.style.display = "none";
+                        if (this.wavDataUri) el.src = this.wavDataUri;
+                        document.body.appendChild(el);
+                    }
+                    this.audioEl = el;
+                } catch (e) {}
+                return this.audioEl;
+            },
+
+            setupAutoUnlockOnTouch() {
+                const unlock = () => {
+                    if (this.isUnlocked) return;
+                    try {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) {
+                            if (!this.audioCtx) this.audioCtx = new AudioCtx();
+                            if (this.audioCtx.state === "suspended") {
+                                this.audioCtx.resume();
+                            }
+                            const buf = this.audioCtx.createBuffer(1, 1, 22050);
+                            const src = this.audioCtx.createBufferSource();
+                            src.buffer = buf;
+                            src.connect(this.audioCtx.destination);
+                            src.start(0);
+                        }
+                        this.isUnlocked = true;
+                    } catch (e) {}
+                };
+                document.addEventListener("touchstart", unlock, { passive: true });
+                document.addEventListener("touchend", unlock, { passive: true });
+                document.addEventListener("click", unlock, { passive: true });
+                document.addEventListener("keydown", unlock, { passive: true });
+            },
+
+            playNotificationSound() {
+                // 1. Putar file WAV via elemen <audio> / Audio instance (Berjalan di Android WebView STREAM_MUSIC)
+                try {
+                    const uri = this.buildNotificationWavDataUri();
+                    if (uri) {
+                        const player = new Audio(uri);
+                        player.volume = 1.0;
+                        const playPromise = player.play();
+                        if (playPromise && typeof playPromise.catch === "function") {
+                            playPromise.catch(() => {
+                                const fallbackEl = this.ensureAudioElement();
+                                if (fallbackEl) {
+                                    fallbackEl.currentTime = 0;
+                                    fallbackEl.volume = 1.0;
+                                    fallbackEl.play().catch(() => {});
+                                }
+                            });
+                        }
+                    }
+                } catch (e) {}
+
+                // 2. Putar juga melalui Web Audio API Synthesizer agar 100% terdengar jernih di semua versi Android
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        if (!this.audioCtx) this.audioCtx = new AudioCtx();
+                        if (this.audioCtx.state === "suspended") {
+                            this.audioCtx.resume().catch(() => {});
+                        }
+                        const ctx = this.audioCtx;
+                        const now = ctx.currentTime;
+                        const chimeNotes = [
+                            { t: 0.0, f: 880.0, d: 0.22 },
+                            { t: 0.15, f: 1174.66, d: 0.22 },
+                            { t: 0.30, f: 1760.0, d: 0.40 }
+                        ];
+                        chimeNotes.forEach(cn => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = "triangle";
+                            osc.frequency.setValueAtTime(cn.f, now + cn.t);
+                            gain.gain.setValueAtTime(0.001, now + cn.t);
+                            gain.gain.exponentialRampToValueAtTime(0.35, now + cn.t + 0.015);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + cn.t + cn.d);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + cn.t);
+                            osc.stop(now + cn.t + cn.d + 0.02);
+                        });
+                    }
+                } catch (e) {}
+
+                // 3. Getarkan HP Android
+                try {
+                    if (navigator.vibrate) {
+                        navigator.vibrate([300, 120, 300, 120, 400]);
+                    }
+                } catch (e) {}
+            }
+        };
+
+        const ElwaNotificationManager = {
+            lastSeenStorageKey: "ELWA_LAST_SEEN_NOTIF_ID_V2",
+            lastSeenNotifId: 1730000002,
+
+            getLastSeenNotifId() {
+                try {
+                    const saved = localStorage.getItem(this.lastSeenStorageKey);
+                    if (saved) {
+                        const num = Number(saved);
+                        if (!isNaN(num) && num > 0) return num;
+                    }
+                } catch (e) {}
+                return this.lastSeenNotifId;
+            },
+
+            setLastSeenNotifId(id) {
+                const num = Number(id) || Date.now();
+                this.lastSeenNotifId = num;
+                try {
+                    localStorage.setItem(this.lastSeenStorageKey, String(num));
+                } catch (e) {}
+            },
+
+            init() {
+                ElwaAudioNotifEngine.init();
+                this.syncBadgeCount();
+
+                // Inisialisasi lastSeenNotifId dari localStorage agar notifikasi yang masuk saat aplikasi baru dibuka tetap terdeteksi
+                try {
+                    const existingSaved = localStorage.getItem(this.lastSeenStorageKey);
+                    if (existingSaved) {
+                        this.lastSeenNotifId = Number(existingSaved) || 1730000002;
+                    } else {
+                        const feed = AppState.notificationsFeed || [];
+                        const initialId = (feed.length > 0 && feed[0].id) ? Number(feed[0].id) : 1730000002;
+                        this.setLastSeenNotifId(initialId);
+                    }
+                } catch (e) {}
+
+                // Daftarkan Service Worker ringan bila didukung agar showNotification berfungsi di Android Chrome / WebAPK
+                this.ensureServiceWorkerRegistered();
+
+                // Minta izin notifikasi HP secara otomatis pada sentuhan pertama jika didukung
                 const requestOnceOnGesture = () => {
                     if ("Notification" in window && Notification.permission === "default") {
                         try {
@@ -12382,6 +12653,26 @@
                     document.removeEventListener("click", requestOnceOnGesture);
                 };
                 document.addEventListener("click", requestOnceOnGesture);
+            },
+
+            ensureServiceWorkerRegistered() {
+                try {
+                    if (navigator.serviceWorker && (location.protocol === "https:" || location.hostname === "localhost")) {
+                        const swCode = `
+                            self.addEventListener('install', e => self.skipWaiting());
+                            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                            self.addEventListener('notificationclick', e => {
+                                e.notification.close();
+                                e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+                                    if (list.length > 0) return list[0].focus();
+                                }));
+                            });
+                        `;
+                        const blob = new Blob([swCode], { type: "application/javascript" });
+                        const swUrl = URL.createObjectURL(blob);
+                        navigator.serviceWorker.register(swUrl).catch(() => {});
+                    }
+                } catch (e) {}
             },
 
             getFormattedTime() {
@@ -12407,34 +12698,65 @@
                 }
             },
 
-            // Kirim ke Status Bar Atas HP (Mengikuti Suara Notifikasi Bawaan HP Masing-Masing)
+            // Kirim ke Status Bar Atas HP & Bunyikan Suara Notifikasi HP Secara Langsung
             dispatchNativeOsNotification(title, body, notifObj) {
-                // 1. Cek jembatan Native Android APK (Website2APK / Cordova / Capacitor / Custom WebView)
+                // 0. WAJIB: Bunyikan Suara Notifikasi + Getar langsung melalui ElwaAudioNotifEngine
+                //    sehingga di aplikasi Android (WebView APK) pasti terdengar bunyi notifikasi!
+                ElwaAudioNotifEngine.playNotificationSound();
+
+                // 1. Cek seluruh jembatan Native Android APK (Website2APK, WebIntoApp, SmartWebView, Cordova, Capacitor, Kodular/AppInventor, Custom WebView)
                 try {
-                    if (window.Android && typeof window.Android.showNotification === "function") {
-                        window.Android.showNotification(title, body);
-                    } else if (window.AndroidNotificationBridge && typeof window.AndroidNotificationBridge.postNotification === "function") {
+                    if (window.Android) {
+                        if (typeof window.Android.showNotification === "function") {
+                            window.Android.showNotification(title, body);
+                        } else if (typeof window.Android.postNotification === "function") {
+                            window.Android.postNotification(title, body);
+                        } else if (typeof window.Android.createNotification === "function") {
+                            window.Android.createNotification(title, body);
+                        } else if (typeof window.Android.showToast === "function") {
+                            window.Android.showToast(`${title}: ${body}`);
+                        }
+                    }
+                    if (window.AndroidInterface && typeof window.AndroidInterface.showNotification === "function") {
+                        window.AndroidInterface.showNotification(title, body);
+                    }
+                    if (window.AndroidFunction && typeof window.AndroidFunction.showNotification === "function") {
+                        window.AndroidFunction.showNotification(title, body);
+                    }
+                    if (window.Website2APK && typeof window.Website2APK.showNotification === "function") {
+                        window.Website2APK.showNotification(title, body);
+                    }
+                    if (window.WebIntoApp && typeof window.WebIntoApp.showNotification === "function") {
+                        window.WebIntoApp.showNotification(title, body);
+                    }
+                    if (window.AndroidNotificationBridge && typeof window.AndroidNotificationBridge.postNotification === "function") {
                         window.AndroidNotificationBridge.postNotification(title, body);
-                    } else if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                    }
+                    if (window.AppInventor && typeof window.AppInventor.setWebViewString === "function") {
+                        window.AppInventor.setWebViewString(JSON.stringify({ type: "elwa_notification", title, body }));
+                    }
+                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                         window.Capacitor.Plugins.LocalNotifications.schedule({
                             notifications: [{
                                 title,
                                 body,
                                 id: Math.floor(Date.now() % 2147483647),
-                                schedule: { at: new Date(Date.now() + 100) }
+                                sound: "default",
+                                schedule: { at: new Date(Date.now() + 50) }
                             }]
                         });
-                    } else if (window.cordova && window.cordova.plugins && window.cordova.plugins.notification && window.cordova.plugins.notification.local) {
+                    }
+                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.notification && window.cordova.plugins.notification.local) {
                         window.cordova.plugins.notification.local.schedule({
                             title,
                             text: body,
+                            sound: true,
                             foreground: true
                         });
                     }
                 } catch (err) {}
 
-                // 2. Standar Web Notification API & ServiceWorker (Android Chrome / Browser / PWA)
-                // Menggunakan silent: false (default) agar OS Android memutar suara notifikasi bawaan HP pengguna
+                // 2. Standar Web Notification API & ServiceWorker (Android Chrome / Browser / PWA / TWA)
                 try {
                     if ("Notification" in window) {
                         const options = {
@@ -12444,56 +12766,49 @@
                             tag: "elwa-notif-" + Date.now(),
                             renotify: true,
                             silent: false,
-                            vibrate: [200, 100, 200],
+                            vibrate: [300, 120, 300, 120, 400],
                             data: notifObj || {}
                         };
 
-                        if (Notification.permission === "granted") {
+                        const triggerWebNotif = () => {
                             if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === "function") {
                                 navigator.serviceWorker.getRegistration().then(reg => {
                                     if (reg && typeof reg.showNotification === "function") {
-                                        reg.showNotification(title, options);
+                                        reg.showNotification(title, options).catch(() => {
+                                            try {
+                                                const n = new Notification(title, options);
+                                                n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
+                                            } catch (e2) {}
+                                        });
                                     } else {
-                                        const n = new Notification(title, options);
-                                        n.onclick = () => {
-                                            window.focus();
-                                            this.openNotificationTarget(notifObj);
-                                        };
+                                        try {
+                                            const n = new Notification(title, options);
+                                            n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
+                                        } catch (e2) {}
                                     }
                                 }).catch(() => {
-                                    const n = new Notification(title, options);
-                                    n.onclick = () => {
-                                        window.focus();
-                                        this.openNotificationTarget(notifObj);
-                                    };
+                                    try {
+                                        const n = new Notification(title, options);
+                                        n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
+                                    } catch (e2) {}
                                 });
                             } else {
-                                const n = new Notification(title, options);
-                                n.onclick = () => {
-                                    window.focus();
-                                    this.openNotificationTarget(notifObj);
-                                };
+                                try {
+                                    const n = new Notification(title, options);
+                                    n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
+                                } catch (e2) {}
                             }
+                        };
+
+                        if (Notification.permission === "granted") {
+                            triggerWebNotif();
                         } else if (Notification.permission === "default") {
                             Notification.requestPermission().then(perm => {
-                                if (perm === "granted") {
-                                    const n = new Notification(title, options);
-                                    n.onclick = () => {
-                                        window.focus();
-                                        this.openNotificationTarget(notifObj);
-                                    };
-                                }
+                                if (perm === "granted") triggerWebNotif();
                             }).catch(() => {});
                         }
                     }
                 } catch (err) {}
-
-                // Getar fisik HP bila didukung perangkat Android
-                try {
-                    if (navigator.vibrate) {
-                        navigator.vibrate([180, 90, 180]);
-                    }
-                } catch (e) {}
             },
 
             // Tampilkan Banner Notifikasi Bar Atas HP (Heads-Up Notification)
@@ -12522,7 +12837,7 @@
                 if (headsUpTimer) clearTimeout(headsUpTimer);
                 headsUpTimer = setTimeout(() => {
                     dismissHeadsUpNotif();
-                }, 6500);
+                }, 9000);
             },
 
             // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil Sesuai Pembaruan Sekolah)
@@ -12541,13 +12856,16 @@
                 AppState.notificationsFeed.unshift(notifObj);
                 if (AppState.notificationsFeed.length > 40) AppState.notificationsFeed.pop();
 
-                this.lastSeenNotifId = notifObj.id;
+                this.setLastSeenNotifId(notifObj.id);
                 this.syncBadgeCount();
                 this.showHeadsUpBanner(notifObj);
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
-                if (typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
-                    ElwaSupabaseDB.scheduleSync(60);
+                if (typeof ElwaSupabaseDB !== 'undefined') {
+                    ElwaSupabaseDB.saveLocalBackup(ElwaSupabaseDB.getSnapshot());
+                    if (ElwaSupabaseDB.isReady) {
+                        ElwaSupabaseDB.syncToSupabase(true);
+                    }
                 }
             },
 
@@ -12591,7 +12909,7 @@
                 AppState.notificationsFeed.unshift(notifObj);
                 if (AppState.notificationsFeed.length > 40) AppState.notificationsFeed.pop();
 
-                this.lastSeenNotifId = notifObj.id;
+                this.setLastSeenNotifId(notifObj.id);
                 this.syncBadgeCount();
                 renderStudentList();
                 renderStudentPrivateUpdatesBanner(AppState.children[AppState.activeChildIdx]);
@@ -12599,8 +12917,11 @@
                 this.showHeadsUpBanner(notifObj);
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
-                if (typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
-                    ElwaSupabaseDB.scheduleSync(60);
+                if (typeof ElwaSupabaseDB !== 'undefined') {
+                    ElwaSupabaseDB.saveLocalBackup(ElwaSupabaseDB.getSnapshot());
+                    if (ElwaSupabaseDB.isReady) {
+                        ElwaSupabaseDB.syncToSupabase(true);
+                    }
                 }
             },
 
@@ -12629,8 +12950,6 @@
                     closeModal();
                     switchView('studentList');
 
-                    // Jika masih di Mode Wali Santri / Biasa, wajib minta password santri terlebih dahulu
-                    // (Atau jika sudah dibuka sebelumnya, tetap tampilkan rincian pembaruannya!)
                     const isStaffRole = AppState.editMode && (AppState.activeRole === 'Super Admin' || AppState.activeRole === 'Guru' || AppState.activeRole === 'Evaluator');
                     const isUnlocked = (AppState.unlockedStudentIndices || []).includes(targetIdx);
 
@@ -12647,16 +12966,76 @@
                 }
             },
 
-            // Cek apakah ada notifikasi baru yang masuk dari perangkat lain via Supabase
-            checkIncomingRemoteNotifications() {
+            // Cek apakah ada notifikasi baru atau perubahan data dari perangkat lain via Supabase
+            checkIncomingRemoteNotifications(prevSnap, newSnap, isInitialLoad = false, hasDataChanged = false) {
                 const feed = AppState.notificationsFeed || [];
                 this.syncBadgeCount();
+                const lastSeen = this.getLastSeenNotifId();
+
                 if (feed.length > 0) {
                     const newest = feed[0];
-                    if (newest && newest.id > this.lastSeenNotifId) {
-                        this.lastSeenNotifId = newest.id;
+                    if (newest && Number(newest.id) > Number(lastSeen)) {
+                        this.setLastSeenNotifId(newest.id);
                         this.showHeadsUpBanner(newest);
                         this.dispatchNativeOsNotification(newest.title, newest.body, newest);
+                        return;
+                    }
+                }
+
+                // Fallback cerdas: jika data di Supabase berubah dari perangkat lain namun feed belum terbarui,
+                // deteksi otomatis bagian yang berubah (Sekolah atau Santri) dan munculkan notifikasi + suara!
+                if (!isInitialLoad && hasDataChanged && prevSnap && newSnap) {
+                    const oldChildren = prevSnap.children || [];
+                    const newChildren = newSnap.children || [];
+                    for (let i = 0; i < newChildren.length; i++) {
+                        const nc = newChildren[i];
+                        const oc = oldChildren.find(c => c.nis === nc.nis) || oldChildren[i];
+                        if (!oc || JSON.stringify(oc) !== JSON.stringify(nc)) {
+                            const fallbackNotif = {
+                                id: Date.now(),
+                                type: 'student',
+                                childIdx: i,
+                                studentName: nc.nama,
+                                studentClass: nc.kelas,
+                                title: 'Pemberitahuan Data Santri',
+                                body: `Ada pemberitahuan atas nama ${nc.nama} kelas ${nc.kelas}`,
+                                timeLabel: this.getFormattedTime(),
+                                read: false
+                            };
+                            this.setLastSeenNotifId(fallbackNotif.id);
+                            this.showHeadsUpBanner(fallbackNotif);
+                            this.dispatchNativeOsNotification(fallbackNotif.title, fallbackNotif.body, fallbackNotif);
+                            return;
+                        }
+                    }
+
+                    // Jika yang berubah adalah data informasi sekolah
+                    const schoolKeys = ['profile', 'visiMisi', 'organisasi', 'akademik', 'sarpras', 'berita', 'agenda', 'kontak'];
+                    for (const sk of schoolKeys) {
+                        if (JSON.stringify(prevSnap[sk]) !== JSON.stringify(newSnap[sk])) {
+                            let bodyMsg = `Terdapat pembaruan informasi sekolah pada ${AppState.profile.nama}`;
+                            let sec = 'sec-profil';
+                            if (sk === 'agenda' && Array.isArray(newSnap.agenda) && newSnap.agenda[0]) {
+                                bodyMsg = `Ada agenda terdekat pada tanggal ${newSnap.agenda[0].tanggal} yaitu ${newSnap.agenda[0].judul}`;
+                                sec = 'sec-berita';
+                            } else if (sk === 'berita' && Array.isArray(newSnap.berita) && newSnap.berita[0]) {
+                                bodyMsg = `Berita terbaru pada tanggal ${newSnap.berita[0].tanggal} yaitu ${newSnap.berita[0].judul}`;
+                                sec = 'sec-berita';
+                            }
+                            const schoolNotif = {
+                                id: Date.now(),
+                                type: 'school',
+                                title: 'Pembaruan Informasi Sekolah',
+                                body: bodyMsg,
+                                targetSection: sec,
+                                timeLabel: this.getFormattedTime(),
+                                read: false
+                            };
+                            this.setLastSeenNotifId(schoolNotif.id);
+                            this.showHeadsUpBanner(schoolNotif);
+                            this.dispatchNativeOsNotification(schoolNotif.title, schoolNotif.body, schoolNotif);
+                            return;
+                        }
                     }
                 }
             }
