@@ -12411,20 +12411,60 @@
         let currentHeadsUpNotifObj = null;
 
         /* ===================================================================
-           MESIN SUARA NOTIFIKASI ANDROID APK & WEBVIEW (WAV + WEB AUDIO API)
-           Menjamin suara notifikasi berbunyi nyaring di HP Android meskipun
-           dibungkus menjadi APK (WebView / Website2APK / WebIntoApp / Cordova)
+           MESIN SUARA NOTIFIKASI ANDROID APK & LAYANAN LATAR BELAKANG (24/7)
+           1. Menghasilkan suara notifikasi .WAV + Web Audio API + Getar HP
+           2. Menjaga aplikasi tetap hidup di latar belakang (Background Daemon:
+              Silent Audio Foreground Keep-Alive + WakeLock + Web Worker Polling)
+              sehingga meskipun pengguna TIDAK sedang membuka aplikasi ELWA
+              (di layar utama HP / membuka aplikasi lain / layar terkunci),
+              notifikasi dan suara tetap muncul di bar notifikasi sistem HP Android.
+           3. Menggunakan ikon bitmap PNG murni (bukan SVG) agar Android OS
+              NotificationManager tidak menolak pembuatan notifikasi status bar.
            =================================================================== */
         const ElwaAudioNotifEngine = {
             audioCtx: null,
             wavDataUri: null,
+            silentWavDataUri: null,
             audioEl: null,
+            silentKeepAliveEl: null,
+            pngIconCache: null,
             isUnlocked: false,
 
             init() {
                 this.buildNotificationWavDataUri();
+                this.buildSilentKeepAliveWavDataUri();
                 this.ensureAudioElement();
-                this.setupAutoUnlockOnTouch();
+                this.setupAutoUnlockAndKeepAlive();
+            },
+
+            // Buat ikon PNG 128x128 valid untuk Android NotificationManager (Android menolak SVG pada icon notifikasi sistem)
+            getValidPngNotificationIcon() {
+                if (this.pngIconCache) return this.pngIconCache;
+                try {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 128;
+                    canvas.height = 128;
+                    const ctx = canvas.getContext("2d");
+                    // Background hijau pesantren
+                    ctx.fillStyle = "#0B3B2C";
+                    ctx.beginPath();
+                    ctx.arc(64, 64, 60, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Lingkaran emas
+                    ctx.lineWidth = 6;
+                    ctx.strokeStyle = "#F59E0B";
+                    ctx.stroke();
+                    // Tulisan ELWA
+                    ctx.fillStyle = "#FBBF24";
+                    ctx.font = "bold 34px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("ELWA", 64, 66);
+                    this.pngIconCache = canvas.toDataURL("image/png");
+                } catch (e) {
+                    this.pngIconCache = undefined;
+                }
+                return this.pngIconCache;
             },
 
             // Buat file audio .WAV 16-bit PCM asli di memori (Nada Lonceng Kristal 3-Nada khas Notifikasi HP Android)
@@ -12448,8 +12488,8 @@
                     writeStr(8, "WAVE");
                     writeStr(12, "fmt ");
                     view.setUint32(16, 16, true);
-                    view.setUint16(20, 1, true); // PCM
-                    view.setUint16(22, 1, true); // Mono
+                    view.setUint16(20, 1, true);
+                    view.setUint16(22, 1, true);
                     view.setUint32(24, sampleRate, true);
                     view.setUint32(28, sampleRate * 2, true);
                     view.setUint16(32, 2, true);
@@ -12457,7 +12497,6 @@
                     writeStr(36, "data");
                     view.setUint32(40, numSamples * 2, true);
 
-                    // 3-note crystal smartphone chime: Note 1 (0.0s: 880Hz A5), Note 2 (0.16s: 1174.66Hz D6), Note 3 (0.32s: 1760Hz A6)
                     const notes = [
                         { start: 0.0, freq: 880.0, decay: 7.5, amp: 0.55 },
                         { start: 0.15, freq: 1174.66, decay: 7.0, amp: 0.60 },
@@ -12474,7 +12513,6 @@
                             if (t >= nt.start) {
                                 const dt = t - nt.start;
                                 const env = Math.min(1, dt / 0.006) * Math.exp(-dt * nt.decay);
-                                // Fundamental + harmonic overtone for clear bell timbre
                                 sample += env * nt.amp * (
                                     0.72 * Math.sin(2 * Math.PI * nt.freq * dt) +
                                     0.28 * Math.sin(2 * Math.PI * (nt.freq * 2) * dt)
@@ -12492,10 +12530,45 @@
                         binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
                     }
                     this.wavDataUri = "data:audio/wav;base64," + btoa(binary);
-                } catch (err) {
-                    console.warn("[ELWA Audio] Gagal membuat WAV:", err);
-                }
+                } catch (err) {}
                 return this.wavDataUri;
+            },
+
+            // Buat file audio .WAV hening (silent loop) agar Android OS menjaga proses WebView tetap hidup di latar belakang
+            buildSilentKeepAliveWavDataUri() {
+                if (this.silentWavDataUri) return this.silentWavDataUri;
+                try {
+                    const sampleRate = 8000;
+                    const numSamples = 8000; // 1 detik hening
+                    const buffer = new ArrayBuffer(44 + numSamples * 2);
+                    const view = new DataView(buffer);
+                    const writeStr = (offset, str) => {
+                        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+                    };
+                    writeStr(0, "RIFF");
+                    view.setUint32(4, 36 + numSamples * 2, true);
+                    writeStr(8, "WAVE");
+                    writeStr(12, "fmt ");
+                    view.setUint32(16, 16, true);
+                    view.setUint16(20, 1, true);
+                    view.setUint16(22, 1, true);
+                    view.setUint32(24, sampleRate, true);
+                    view.setUint32(28, sampleRate * 2, true);
+                    view.setUint16(32, 2, true);
+                    view.setUint16(34, 16, true);
+                    writeStr(36, "data");
+                    view.setUint32(40, numSamples * 2, true);
+                    for (let i = 0; i < numSamples; i++) {
+                        view.setInt16(44 + i * 2, 1, true);
+                    }
+                    const bytes = new Uint8Array(buffer);
+                    let binary = "";
+                    for (let i = 0; i < bytes.length; i += 4096) {
+                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 4096));
+                    }
+                    this.silentWavDataUri = "data:audio/wav;base64," + btoa(binary);
+                } catch (e) {}
+                return this.silentWavDataUri;
             },
 
             ensureAudioElement() {
@@ -12515,9 +12588,28 @@
                 return this.audioEl;
             },
 
-            setupAutoUnlockOnTouch() {
+            startSilentBackgroundKeepAlive() {
+                try {
+                    if (!this.silentKeepAliveEl) {
+                        const uri = this.buildSilentKeepAliveWavDataUri();
+                        if (!uri) return;
+                        const sEl = document.createElement("audio");
+                        sEl.id = "elwaSilentKeepAliveAudio";
+                        sEl.src = uri;
+                        sEl.loop = true;
+                        sEl.volume = 0.01;
+                        sEl.style.display = "none";
+                        document.body.appendChild(sEl);
+                        this.silentKeepAliveEl = sEl;
+                    }
+                    if (this.silentKeepAliveEl && this.silentKeepAliveEl.paused) {
+                        this.silentKeepAliveEl.play().catch(() => {});
+                    }
+                } catch (e) {}
+            },
+
+            setupAutoUnlockAndKeepAlive() {
                 const unlock = () => {
-                    if (this.isUnlocked) return;
                     try {
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
                         if (AudioCtx) {
@@ -12525,12 +12617,15 @@
                             if (this.audioCtx.state === "suspended") {
                                 this.audioCtx.resume();
                             }
-                            const buf = this.audioCtx.createBuffer(1, 1, 22050);
-                            const src = this.audioCtx.createBufferSource();
-                            src.buffer = buf;
-                            src.connect(this.audioCtx.destination);
-                            src.start(0);
+                            if (!this.isUnlocked) {
+                                const buf = this.audioCtx.createBuffer(1, 1, 22050);
+                                const src = this.audioCtx.createBufferSource();
+                                src.buffer = buf;
+                                src.connect(this.audioCtx.destination);
+                                src.start(0);
+                            }
                         }
+                        this.startSilentBackgroundKeepAlive();
                         this.isUnlocked = true;
                     } catch (e) {}
                 };
@@ -12541,7 +12636,6 @@
             },
 
             playNotificationSound() {
-                // 1. Putar file WAV via elemen <audio> / Audio instance (Berjalan di Android WebView STREAM_MUSIC)
                 try {
                     const uri = this.buildNotificationWavDataUri();
                     if (uri) {
@@ -12561,7 +12655,6 @@
                     }
                 } catch (e) {}
 
-                // 2. Putar juga melalui Web Audio API Synthesizer agar 100% terdengar jernih di semua versi Android
                 try {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
                     if (AudioCtx) {
@@ -12582,7 +12675,7 @@
                             osc.type = "triangle";
                             osc.frequency.setValueAtTime(cn.f, now + cn.t);
                             gain.gain.setValueAtTime(0.001, now + cn.t);
-                            gain.gain.exponentialRampToValueAtTime(0.35, now + cn.t + 0.015);
+                            gain.gain.exponentialRampToValueAtTime(0.38, now + cn.t + 0.015);
                             gain.gain.exponentialRampToValueAtTime(0.0001, now + cn.t + cn.d);
                             osc.connect(gain);
                             gain.connect(ctx.destination);
@@ -12592,11 +12685,158 @@
                     }
                 } catch (e) {}
 
-                // 3. Getarkan HP Android
                 try {
                     if (navigator.vibrate) {
-                        navigator.vibrate([300, 120, 300, 120, 400]);
+                        navigator.vibrate([300, 120, 300, 120, 450]);
                     }
+                } catch (e) {}
+            }
+        };
+
+        /* ===================================================================
+           DAEMON LATAR BELAKANG ANDROID (WEB WORKER + WAKELOCK + NATIVE MODE)
+           Memastikan aplikasi tetap memantau database Supabase di latar belakang
+           meskipun pengguna sedang keluar dari aplikasi / di layar utama HP!
+           =================================================================== */
+        const ElwaBackgroundDaemon = {
+            worker: null,
+            wakeLockSentinel: null,
+            pendingBackgroundEchoNotif: null,
+            pendingBackgroundEchoTime: 0,
+
+            init() {
+                this.enableNativeBackgroundMode();
+                this.startBackgroundWebWorker();
+                this.requestWakeLock();
+
+                document.addEventListener("visibilitychange", () => {
+                    if (document.visibilityState === "hidden") {
+                        // Pastikan silent audio keep-alive aktif saat aplikasi diminimize ke latar belakang
+                        ElwaAudioNotifEngine.startSilentBackgroundKeepAlive();
+                        if (typeof ElwaSupabaseDB !== "undefined") {
+                            ElwaSupabaseDB.checkRemoteUpdate();
+                        }
+                        // Jika pengguna baru saja melakukan perubahan (< 20 detik lalu) lalu keluar dari aplikasi (untuk menguji di 1 HP),
+                        // kirimkan notifikasi sistem HP saat berada di luar aplikasi!
+                        if (this.pendingBackgroundEchoNotif && (Date.now() - this.pendingBackgroundEchoTime < 20000)) {
+                            const echoNotif = this.pendingBackgroundEchoNotif;
+                            this.pendingBackgroundEchoNotif = null;
+                            setTimeout(() => {
+                                if (document.visibilityState === "hidden") {
+                                    ElwaNotificationManager.dispatchNativeOsNotification(echoNotif.title, echoNotif.body, echoNotif);
+                                }
+                            }, 2200);
+                        }
+                    } else if (document.visibilityState === "visible") {
+                        this.requestWakeLock();
+                        if (typeof ElwaSupabaseDB !== "undefined") {
+                            ElwaSupabaseDB.checkRemoteUpdate();
+                        }
+                    }
+                });
+            },
+
+            enableNativeBackgroundMode() {
+                try {
+                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.backgroundMode) {
+                        window.cordova.plugins.backgroundMode.setDefaults({
+                            title: "ELWA CONECT Aktif",
+                            text: "Memantau pemberitahuan sekolah & santri secara otomatis",
+                            silent: true,
+                            hidden: true
+                        });
+                        window.cordova.plugins.backgroundMode.enable();
+                    }
+                    if (window.Android && typeof window.Android.enableBackgroundMode === "function") {
+                        window.Android.enableBackgroundMode(true);
+                    }
+                    if (window.Website2APK && typeof window.Website2APK.askEnableNotification === "function") {
+                        window.Website2APK.askEnableNotification();
+                    }
+                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                        window.Capacitor.Plugins.LocalNotifications.requestPermissions().catch(() => {});
+                    }
+                } catch (e) {}
+            },
+
+            async requestWakeLock() {
+                try {
+                    if ("wakeLock" in navigator && document.visibilityState === "visible") {
+                        this.wakeLockSentinel = await navigator.wakeLock.request("screen");
+                    }
+                } catch (e) {}
+            },
+
+            // Web Worker berjalan di thread terpisah yang TIDAK dibekukan saat WebView berada di latar belakang
+            startBackgroundWebWorker() {
+                if (this.worker) return;
+                try {
+                    const workerCode = `
+                        let pollCfg = null;
+                        let lastUpdated = null;
+
+                        self.onmessage = function(e) {
+                            if (e.data && e.data.type === 'CONFIG') {
+                                pollCfg = e.data.config;
+                            }
+                        };
+
+                        setInterval(async function() {
+                            self.postMessage({ type: 'BACKGROUND_TICK', ts: Date.now() });
+                            if (pollCfg && pollCfg.valid && pollCfg.url && pollCfg.key) {
+                                try {
+                                    const endpoint = pollCfg.url.replace(/\/+$/, '') + '/rest/v1/' + pollCfg.mainTable + '?id=eq.' + encodeURIComponent(pollCfg.recordId) + '&select=updated_at';
+                                    const res = await fetch(endpoint, {
+                                        method: 'GET',
+                                        headers: {
+                                            'apikey': pollCfg.key,
+                                            'Authorization': 'Bearer ' + pollCfg.key,
+                                            'Cache-Control': 'no-cache'
+                                        }
+                                    });
+                                    if (res.ok) {
+                                        const arr = await res.json();
+                                        if (Array.isArray(arr) && arr[0] && arr[0].updated_at) {
+                                            if (lastUpdated && arr[0].updated_at !== lastUpdated) {
+                                                lastUpdated = arr[0].updated_at;
+                                                self.postMessage({ type: 'WORKER_REMOTE_CHANGED', updated_at: lastUpdated });
+                                            } else if (!lastUpdated) {
+                                                lastUpdated = arr[0].updated_at;
+                                            }
+                                        }
+                                    }
+                                } catch (err) {}
+                            }
+                        }, 2000);
+                    `;
+                    const blob = new Blob([workerCode], { type: "application/javascript" });
+                    this.worker = new Worker(URL.createObjectURL(blob));
+                    this.worker.onmessage = (e) => {
+                        if (!e.data) return;
+                        if (e.data.type === "BACKGROUND_TICK" || e.data.type === "WORKER_REMOTE_CHANGED") {
+                            if (typeof ElwaSupabaseDB !== "undefined" && ElwaSupabaseDB.isReady) {
+                                ElwaSupabaseDB.checkRemoteUpdate();
+                            }
+                        }
+                    };
+                    this.syncWorkerConfig();
+                } catch (e) {}
+            },
+
+            syncWorkerConfig() {
+                if (!this.worker || typeof ElwaSupabaseDB === "undefined") return;
+                try {
+                    const creds = ElwaSupabaseDB.checkCredentials();
+                    this.worker.postMessage({
+                        type: "CONFIG",
+                        config: {
+                            valid: creds.valid,
+                            url: creds.url,
+                            key: creds.key,
+                            mainTable: SUPABASE_CONFIG.mainTable,
+                            recordId: SUPABASE_CONFIG.recordId
+                        }
+                    });
                 } catch (e) {}
             }
         };
@@ -12626,9 +12866,9 @@
 
             init() {
                 ElwaAudioNotifEngine.init();
+                ElwaBackgroundDaemon.init();
                 this.syncBadgeCount();
 
-                // Inisialisasi lastSeenNotifId dari localStorage agar notifikasi yang masuk saat aplikasi baru dibuka tetap terdeteksi
                 try {
                     const existingSaved = localStorage.getItem(this.lastSeenStorageKey);
                     if (existingSaved) {
@@ -12640,10 +12880,9 @@
                     }
                 } catch (e) {}
 
-                // Daftarkan Service Worker ringan bila didukung agar showNotification berfungsi di Android Chrome / WebAPK
                 this.ensureServiceWorkerRegistered();
 
-                // Minta izin notifikasi HP secara otomatis pada sentuhan pertama jika didukung
+                // Minta izin notifikasi sistem HP pada sentuhan pertama jika status masih default
                 const requestOnceOnGesture = () => {
                     if ("Notification" in window && Notification.permission === "default") {
                         try {
@@ -12651,26 +12890,16 @@
                         } catch (e) {}
                     }
                     document.removeEventListener("click", requestOnceOnGesture);
+                    document.removeEventListener("touchstart", requestOnceOnGesture);
                 };
                 document.addEventListener("click", requestOnceOnGesture);
+                document.addEventListener("touchstart", requestOnceOnGesture, { passive: true });
             },
 
             ensureServiceWorkerRegistered() {
                 try {
                     if (navigator.serviceWorker && (location.protocol === "https:" || location.hostname === "localhost")) {
-                        const swCode = `
-                            self.addEventListener('install', e => self.skipWaiting());
-                            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                            self.addEventListener('notificationclick', e => {
-                                e.notification.close();
-                                e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-                                    if (list.length > 0) return list[0].focus();
-                                }));
-                            });
-                        `;
-                        const blob = new Blob([swCode], { type: "application/javascript" });
-                        const swUrl = URL.createObjectURL(blob);
-                        navigator.serviceWorker.register(swUrl).catch(() => {});
+                        navigator.serviceWorker.register("./sw.js").catch(() => {});
                     }
                 } catch (e) {}
             },
@@ -12698,149 +12927,173 @@
                 }
             },
 
-            // Kirim ke Status Bar Atas HP & Bunyikan Suara Notifikasi HP Secara Langsung
+            // Kirim Notifikasi Langsung ke Sistem Operasi HP Android (Status Bar HP di Luar Aplikasi) + Suara
             dispatchNativeOsNotification(title, body, notifObj) {
-                // 0. WAJIB: Bunyikan Suara Notifikasi + Getar langsung melalui ElwaAudioNotifEngine
-                //    sehingga di aplikasi Android (WebView APK) pasti terdengar bunyi notifikasi!
+                const cleanTitle = String(title || "ELWA CONECT");
+                const cleanBody = String(body || "Ada pemberitahuan baru pada aplikasi ELWA CONECT");
+                const pngIcon = ElwaAudioNotifEngine.getValidPngNotificationIcon();
+
+                // 0. Bunyikan Suara Notifikasi + Getar HP
                 ElwaAudioNotifEngine.playNotificationSound();
 
-                // 1. Cek seluruh jembatan Native Android APK (Website2APK, WebIntoApp, SmartWebView, Cordova, Capacitor, Kodular/AppInventor, Custom WebView)
+                // 1. Panggil seluruh jembatan Native Android APK (Website2APK, WebIntoApp, SmartWebView, Cordova, Capacitor, Kodular, Android Studio JavaScriptInterface)
                 try {
-                    if (window.Android) {
-                        if (typeof window.Android.showNotification === "function") {
-                            window.Android.showNotification(title, body);
-                        } else if (typeof window.Android.postNotification === "function") {
-                            window.Android.postNotification(title, body);
-                        } else if (typeof window.Android.createNotification === "function") {
-                            window.Android.createNotification(title, body);
-                        } else if (typeof window.Android.showToast === "function") {
-                            window.Android.showToast(`${title}: ${body}`);
-                        }
-                    }
-                    if (window.AndroidInterface && typeof window.AndroidInterface.showNotification === "function") {
-                        window.AndroidInterface.showNotification(title, body);
-                    }
-                    if (window.AndroidFunction && typeof window.AndroidFunction.showNotification === "function") {
-                        window.AndroidFunction.showNotification(title, body);
-                    }
-                    if (window.Website2APK && typeof window.Website2APK.showNotification === "function") {
-                        window.Website2APK.showNotification(title, body);
-                    }
-                    if (window.WebIntoApp && typeof window.WebIntoApp.showNotification === "function") {
-                        window.WebIntoApp.showNotification(title, body);
-                    }
-                    if (window.AndroidNotificationBridge && typeof window.AndroidNotificationBridge.postNotification === "function") {
-                        window.AndroidNotificationBridge.postNotification(title, body);
-                    }
+                    const bridgeTargets = [
+                        window.Android,
+                        window.AndroidInterface,
+                        window.AndroidFunction,
+                        window.Website2APK,
+                        window.WebIntoApp,
+                        window.SmartWebView,
+                        window.NativeAndroid,
+                        window.JSBridge,
+                        window.AndroidNotificationBridge,
+                        window.apk,
+                        window.webapp
+                    ];
+
+                    bridgeTargets.forEach(bridge => {
+                        if (!bridge) return;
+                        try {
+                            if (typeof bridge.showNotification === "function") {
+                                bridge.showNotification(cleanTitle, cleanBody);
+                            } else if (typeof bridge.postNotification === "function") {
+                                bridge.postNotification(cleanTitle, cleanBody);
+                            } else if (typeof bridge.sendNotification === "function") {
+                                bridge.sendNotification(cleanTitle, cleanBody);
+                            } else if (typeof bridge.createNotification === "function") {
+                                bridge.createNotification(cleanTitle, cleanBody);
+                            } else if (typeof bridge.notify === "function") {
+                                bridge.notify(cleanTitle, cleanBody);
+                            } else if (typeof bridge.pushNotification === "function") {
+                                bridge.pushNotification(cleanTitle, cleanBody);
+                            }
+                        } catch (bErr) {}
+                    });
+
                     if (window.AppInventor && typeof window.AppInventor.setWebViewString === "function") {
-                        window.AppInventor.setWebViewString(JSON.stringify({ type: "elwa_notification", title, body }));
+                        window.AppInventor.setWebViewString(JSON.stringify({
+                            type: "elwa_notification",
+                            title: cleanTitle,
+                            body: cleanBody,
+                            ts: Date.now()
+                        }));
                     }
+
+                    if (window.median && window.median.localNotifications && typeof window.median.localNotifications.create === "function") {
+                        window.median.localNotifications.create({ title: cleanTitle, body: cleanBody });
+                    } else if (window.gonative && window.gonative.localNotifications && typeof window.gonative.localNotifications.create === "function") {
+                        window.gonative.localNotifications.create({ title: cleanTitle, body: cleanBody });
+                    }
+
                     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                         window.Capacitor.Plugins.LocalNotifications.schedule({
                             notifications: [{
-                                title,
-                                body,
+                                title: cleanTitle,
+                                body: cleanBody,
                                 id: Math.floor(Date.now() % 2147483647),
                                 sound: "default",
                                 schedule: { at: new Date(Date.now() + 50) }
                             }]
                         });
                     }
+
                     if (window.cordova && window.cordova.plugins && window.cordova.plugins.notification && window.cordova.plugins.notification.local) {
                         window.cordova.plugins.notification.local.schedule({
-                            title,
-                            text: body,
+                            id: Math.floor(Date.now() % 2147483647),
+                            title: cleanTitle,
+                            text: cleanBody,
                             sound: true,
+                            vibrate: true,
+                            wakeup: true,
+                            priority: 2,
                             foreground: true
                         });
                     }
                 } catch (err) {}
 
-                // 2. Standar Web Notification API & ServiceWorker (Android Chrome / Browser / PWA / TWA)
+                // 2. Panggil Konstruktor Standar `new Notification()` secara SINKRON & LANGSUNG dengan ikon PNG valid
+                //    (Banyak APK Builder mem-polyfill window.Notification dan membutuhkan pemanggilan sinkron dengan opsi sederhana)
                 try {
                     if ("Notification" in window) {
-                        const options = {
-                            body,
-                            icon: AppState.profile.logoUrl || undefined,
-                            badge: AppState.profile.logoUrl || undefined,
-                            tag: "elwa-notif-" + Date.now(),
-                            renotify: true,
-                            silent: false,
-                            vibrate: [300, 120, 300, 120, 400],
-                            data: notifObj || {}
-                        };
-
-                        const triggerWebNotif = () => {
-                            if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === "function") {
-                                navigator.serviceWorker.getRegistration().then(reg => {
-                                    if (reg && typeof reg.showNotification === "function") {
-                                        reg.showNotification(title, options).catch(() => {
-                                            try {
-                                                const n = new Notification(title, options);
-                                                n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
-                                            } catch (e2) {}
-                                        });
-                                    } else {
-                                        try {
-                                            const n = new Notification(title, options);
-                                            n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
-                                        } catch (e2) {}
-                                    }
-                                }).catch(() => {
-                                    try {
-                                        const n = new Notification(title, options);
-                                        n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
-                                    } catch (e2) {}
+                        const fireStandardNotif = () => {
+                            let created = false;
+                            // Coba dengan ikon PNG valid terlebih dahulu
+                            try {
+                                const n1 = new Notification(cleanTitle, {
+                                    body: cleanBody,
+                                    icon: pngIcon,
+                                    tag: "elwa-os-" + Date.now(),
+                                    silent: false
                                 });
-                            } else {
+                                n1.onclick = () => {
+                                    window.focus();
+                                    this.openNotificationTarget(notifObj);
+                                };
+                                created = true;
+                            } catch (e1) {
+                                // Fallback paling murni { body } untuk WebView APK yang hanya menerima parameter minimal
                                 try {
-                                    const n = new Notification(title, options);
-                                    n.onclick = () => { window.focus(); this.openNotificationTarget(notifObj); };
+                                    const n2 = new Notification(cleanTitle, { body: cleanBody });
+                                    n2.onclick = () => {
+                                        window.focus();
+                                        this.openNotificationTarget(notifObj);
+                                    };
+                                    created = true;
                                 } catch (e2) {}
+                            }
+
+                            // 3. Jika berjalan di Android Chrome / WebAPK / PWA yang mewajibkan ServiceWorkerRegistration.showNotification
+                            if (!created && navigator.serviceWorker && typeof navigator.serviceWorker.getRegistrations === "function") {
+                                navigator.serviceWorker.getRegistrations().then(regs => {
+                                    const reg = regs && regs[0];
+                                    if (reg && typeof reg.showNotification === "function") {
+                                        reg.showNotification(cleanTitle, {
+                                            body: cleanBody,
+                                            icon: pngIcon,
+                                            badge: pngIcon,
+                                            tag: "elwa-sw-" + Date.now(),
+                                            renotify: true,
+                                            silent: false,
+                                            vibrate: [300, 120, 300, 120, 450],
+                                            data: notifObj || {}
+                                        }).catch(() => {});
+                                    }
+                                }).catch(() => {});
                             }
                         };
 
-                        if (Notification.permission === "granted") {
-                            triggerWebNotif();
-                        } else if (Notification.permission === "default") {
-                            Notification.requestPermission().then(perm => {
-                                if (perm === "granted") triggerWebNotif();
-                            }).catch(() => {});
+                        if (Notification.permission === "granted" || typeof Notification.permission === "undefined") {
+                            fireStandardNotif();
+                        } else if (Notification.permission !== "denied") {
+                            try {
+                                const req = Notification.requestPermission(perm => {
+                                    if (perm === "granted") fireStandardNotif();
+                                });
+                                if (req && typeof req.then === "function") {
+                                    req.then(perm => {
+                                        if (perm === "granted") fireStandardNotif();
+                                    }).catch(() => {});
+                                }
+                            } catch (ePerm) {
+                                fireStandardNotif();
+                            }
                         }
                     }
                 } catch (err) {}
             },
 
-            // Tampilkan Banner Notifikasi Bar Atas HP (Heads-Up Notification)
+            // Tidak lagi memunculkan popup banner palsu di dalam aplikasi agar fokus penuh pada Notifikasi Sistem HP Android
             showHeadsUpBanner(notifObj) {
-                if (!notifObj) return;
                 currentHeadsUpNotifObj = notifObj;
                 const bar = document.getElementById('androidHeadsUpNotifBar');
-                const titleEl = document.getElementById('headsUpNotifTitle');
-                const bodyEl = document.getElementById('headsUpNotifBody');
-                const timeEl = document.getElementById('headsUpNotifTime');
-                const iconEl = document.getElementById('headsUpNotifIcon');
-                if (!bar) return;
-
-                if (titleEl) titleEl.innerText = notifObj.title || 'Pemberitahuan Baru';
-                if (bodyEl) bodyEl.innerText = notifObj.body || '';
-                if (timeEl) timeEl.innerText = notifObj.timeLabel || 'Baru saja';
-                if (iconEl) {
-                    iconEl.className = notifObj.type === 'school'
-                        ? 'fa-solid fa-school animate-bounce'
-                        : 'fa-solid fa-user-shield animate-bounce';
+                if (bar) {
+                    bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                    bar.classList.add('-translate-y-40', 'opacity-0', 'pointer-events-none');
                 }
-
-                bar.classList.remove('-translate-y-40', 'opacity-0', 'pointer-events-none');
-                bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
-
-                if (headsUpTimer) clearTimeout(headsUpTimer);
-                headsUpTimer = setTimeout(() => {
-                    dismissHeadsUpNotif();
-                }, 9000);
             },
 
-            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil Sesuai Pembaruan Sekolah)
+            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil di Notifikasi HP)
             notifySchoolUpdate(title, bodyText, targetSection = 'sec-profil') {
                 const notifObj = {
                     id: Date.now(),
@@ -12858,7 +13111,8 @@
 
                 this.setLastSeenNotifId(notifObj.id);
                 this.syncBadgeCount();
-                this.showHeadsUpBanner(notifObj);
+                ElwaBackgroundDaemon.pendingBackgroundEchoNotif = notifObj;
+                ElwaBackgroundDaemon.pendingBackgroundEchoTime = Date.now();
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
@@ -12869,7 +13123,7 @@
                 }
             },
 
-            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga di Bar Atas HP, Detail Muncul Setelah Password)
+            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga di Notifikasi HP, Detail Muncul Setelah Password)
             notifyStudentUpdate(childIdx, kategori, rincianDetail, tabTarget = 'capaian') {
                 const idx = typeof childIdx === 'number' ? childIdx : AppState.activeChildIdx;
                 const child = AppState.children[idx];
@@ -12878,7 +13132,6 @@
                 const roleSender = getRoleDisplayName(AppState.activeRole) || 'Pengelola Sekolah';
                 const timeStr = this.getFormattedTime();
 
-                // Simpan rincian spesifik secara privat di dalam objek santri (hanya terlihat setelah verifikasi password)
                 if (!Array.isArray(child.pendingUpdates)) child.pendingUpdates = [];
                 child.pendingUpdates.unshift({
                     id: Date.now() + Math.floor(Math.random() * 100),
@@ -12891,7 +13144,6 @@
                 });
                 if (child.pendingUpdates.length > 25) child.pendingUpdates.pop();
 
-                // Pesan Notifikasi di Bar Atas HP (Tanpa menyebutkan bagian yang diperbarui demi privasi)
                 const privacyBody = `Ada pemberitahuan atas nama ${child.nama} kelas ${child.kelas}`;
                 const notifObj = {
                     id: Date.now(),
@@ -12914,7 +13166,8 @@
                 renderStudentList();
                 renderStudentPrivateUpdatesBanner(AppState.children[AppState.activeChildIdx]);
 
-                this.showHeadsUpBanner(notifObj);
+                ElwaBackgroundDaemon.pendingBackgroundEchoNotif = notifObj;
+                ElwaBackgroundDaemon.pendingBackgroundEchoTime = Date.now();
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
@@ -12966,7 +13219,7 @@
                 }
             },
 
-            // Cek apakah ada notifikasi baru atau perubahan data dari perangkat lain via Supabase
+            // Cek apakah ada notifikasi baru atau perubahan data dari perangkat lain via Supabase (Termasuk saat aplikasi di latar belakang)
             checkIncomingRemoteNotifications(prevSnap, newSnap, isInitialLoad = false, hasDataChanged = false) {
                 const feed = AppState.notificationsFeed || [];
                 this.syncBadgeCount();
@@ -12976,14 +13229,11 @@
                     const newest = feed[0];
                     if (newest && Number(newest.id) > Number(lastSeen)) {
                         this.setLastSeenNotifId(newest.id);
-                        this.showHeadsUpBanner(newest);
                         this.dispatchNativeOsNotification(newest.title, newest.body, newest);
                         return;
                     }
                 }
 
-                // Fallback cerdas: jika data di Supabase berubah dari perangkat lain namun feed belum terbarui,
-                // deteksi otomatis bagian yang berubah (Sekolah atau Santri) dan munculkan notifikasi + suara!
                 if (!isInitialLoad && hasDataChanged && prevSnap && newSnap) {
                     const oldChildren = prevSnap.children || [];
                     const newChildren = newSnap.children || [];
@@ -13003,13 +13253,11 @@
                                 read: false
                             };
                             this.setLastSeenNotifId(fallbackNotif.id);
-                            this.showHeadsUpBanner(fallbackNotif);
                             this.dispatchNativeOsNotification(fallbackNotif.title, fallbackNotif.body, fallbackNotif);
                             return;
                         }
                     }
 
-                    // Jika yang berubah adalah data informasi sekolah
                     const schoolKeys = ['profile', 'visiMisi', 'organisasi', 'akademik', 'sarpras', 'berita', 'agenda', 'kontak'];
                     for (const sk of schoolKeys) {
                         if (JSON.stringify(prevSnap[sk]) !== JSON.stringify(newSnap[sk])) {
@@ -13032,7 +13280,6 @@
                                 read: false
                             };
                             this.setLastSeenNotifId(schoolNotif.id);
-                            this.showHeadsUpBanner(schoolNotif);
                             this.dispatchNativeOsNotification(schoolNotif.title, schoolNotif.body, schoolNotif);
                             return;
                         }
@@ -13466,7 +13713,11 @@
                 // 5. Proteksi "Tekan sekali lagi untuk keluar" saat berada di halaman paling awal
                 const now = Date.now();
                 if (now - this.lastBackExitTime < 2200) {
-                    if (navigator.app && typeof navigator.app.exitApp === 'function') {
+                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.backgroundMode && typeof window.cordova.plugins.backgroundMode.moveToBackground === 'function') {
+                        window.cordova.plugins.backgroundMode.moveToBackground();
+                    } else if (window.Android && typeof window.Android.moveTaskToBack === 'function') {
+                        window.Android.moveTaskToBack(true);
+                    } else if (navigator.app && typeof navigator.app.exitApp === 'function') {
                         navigator.app.exitApp();
                     }
                     return false;
