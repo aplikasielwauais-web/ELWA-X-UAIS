@@ -4424,7 +4424,6 @@
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 closeModal();
                 showToast(`Foto profil ${child.nama} berhasil diperbarui!`, "success");
-                ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Foto Profil Santri", `Foto profil identitas ananda ${child.nama} telah diperbarui oleh Admin.`, "capaian");
             };
 
             openModal();
@@ -4750,7 +4749,6 @@
                 renderDashboard();
                 closeModal();
                 showToast(`Santri baru "${nama}" berhasil ditambahkan & disimpan ke Supabase!`, "success");
-                ElwaNotificationManager.notifySchoolUpdate("Data Santri Baru", `Santri baru atas nama ${nama} (${kelas}) telah terdaftar di ${AppState.profile.nama}`, "sec-profil");
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
                     ElwaSupabaseDB.syncToSupabase(true);
@@ -4828,7 +4826,6 @@
                 }
 
                 showToast(`Data santri "${deletedName}" (${reason}) berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Santri", `Data santri ${deletedName} (${reason}) telah diperbarui oleh Admin`, "sec-profil");
 
                 if (typeof ElwaSupabaseDB !== 'undefined') {
                     ElwaSupabaseDB.deleteStudentFromSupabase(deletedNis);
@@ -5379,7 +5376,6 @@
             if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
             openKelolaAkumulasiPosModal(posIdx, cIdx);
             showToast("Catatan cicilan dihapus & sisa tagihan diperbarui", "info");
-            ElwaNotificationManager.notifyStudentUpdate(cIdx, `Keuangan (${p.pos})`, `Riwayat cicilan ${p.pos} diperbarui. Sisa tagihan saat ini: ${formatNumberToRupiah(p.sisaTagihan)}.`, "keuangan");
         }
         // MODAL 4: CATAT PELANGGARAN + BUKTI FOTO (ADMIN, GURU / MUSYRIF, & EVALUATOR)
         let tempPelanggaranPhotoData = null;
@@ -5723,7 +5719,6 @@
                 syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 showToast(`Kategori diubah menjadi Pelanggaran ${newTingkat}`, "info");
-                ElwaNotificationManager.notifyStudentUpdate(idx, "Evaluasi Kedisiplinan", `Kategori catatan kedisiplinan "${item.kasus}" (${item.tgl}) diperbarui menjadi tingkat ${newTingkat}.`, "pelanggaran");
             }
         }
 
@@ -5740,7 +5735,6 @@
                 syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 showToast("Status penanganan diperbarui", "info");
-                ElwaNotificationManager.notifyStudentUpdate(idx, "Status Pembinaan Kedisiplinan", `Status catatan "${item.kasus}" (${item.tgl}) diperbarui menjadi: ${item.tertangani ? "Sudah Tertangani & Dibina" : "Perlu Tindak Lanjut"}.`, "pelanggaran");
             }
         }
 
@@ -5754,7 +5748,6 @@
             syncDashboardRekapCards(AppState.children[AppState.activeChildIdx]);
             if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
             showToast("Catatan pelanggaran dihapus", "info");
-            ElwaNotificationManager.notifyStudentUpdate(idx, "Evaluasi Kedisiplinan", `Data riwayat catatan kedisiplinan ananda ${child.nama} telah diperbarui.`, "pelanggaran");
         }
 
         // MODAL 5: INPUT / EDIT CAPAIAN NILAI PER PILAR (GURU & ADMIN)
@@ -6064,7 +6057,6 @@
                 if (typeof renderEvaluatorDashboard === 'function') renderEvaluatorDashboard();
                 closeModal();
                 showToast(`Periode ${newLabel} berhasil ditambahkan!`, "success");
-                ElwaNotificationManager.notifySchoolUpdate("Periode Semester Baru", `Periode akademik ${newLabel} telah dibuka`, "sec-akademik");
             };
             openModal();
         }
@@ -6162,7 +6154,6 @@
             syncChildHafalanFromLatest(child);
             renderChildPortal();
             showToast("Riwayat hafalan dihapus & data disinkronkan", "info");
-            ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Riwayat Hafalan Al-Qur'an", `Data riwayat setoran hafalan ananda ${child.nama} telah diperbarui.`, "hafalan");
         }
 
         /* ===================================================
@@ -8385,7 +8376,6 @@
                 renderChildPortal();
                 closeModal();
                 showToast("Data santri pegangan Musyrif berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembagian Musyrif Asrama", `Data pembagian Musyrif & Santri Pegangan telah diperbarui`, "sec-organisasi");
             };
             openModal();
         }
@@ -9052,7 +9042,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Banner sekolah berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Banner Sekolah", `Foto banner utama ${AppState.profile.nama} telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9094,7 +9083,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Logo sekolah berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Logo Sekolah", `Logo resmi ${AppState.profile.nama} telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9361,7 +9349,6 @@
             AppState.sarpras.splice(idx, 1);
             renderSchoolProfile();
             showToast(`Sarpras "${removed ? removed.nama : ''}" berhasil dihapus!`, "info");
-            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Fasilitas "${removed ? removed.nama : 'Sarpras'}" telah diperbarui oleh Admin`, "sec-sarpras");
         }
 
         function openAddBeritaModal() {
@@ -9613,7 +9600,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Informasi profil berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Informasi profil "${judul}" telah diperbarui`, "sec-profil");
             };
             openModal();
         }
@@ -9624,7 +9610,6 @@
             AppState.profile.extraItems.splice(idx, 1);
             renderSchoolProfile();
             showToast("Informasi tambahan profil berhasil dihapus!", "info");
-            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Data informasi tambahan pada Profil Sekolah telah diperbarui`, "sec-profil");
         }
 
         // 1C. HAPUS BAGIAN PROFIL SEKOLAH
@@ -9667,7 +9652,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Bagian profil terpilih berhasil dihapus!", "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Profil Sekolah", `Data pada bagian Profil Sekolah telah diperbarui oleh Admin`, "sec-profil");
             };
             openModal();
         }
@@ -9735,7 +9719,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`Misi ke-${idx + 1} berhasil diperbarui!`, "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Butir Misi ke-${idx + 1} lembaga telah diperbarui`, "sec-visi");
             };
             openModal();
         }
@@ -9746,7 +9729,6 @@
             AppState.visiMisi.misi.splice(idx, 1);
             renderSchoolProfile();
             showToast(`Misi ke-${idx + 1} berhasil dihapus!`, "info");
-            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Daftar Misi lembaga telah diperbarui oleh Admin`, "sec-visi");
         }
 
         function openDeleteVisiMisiModal() {
@@ -9778,7 +9760,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data Visi & Misi terpilih berhasil dihapus!", "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Visi & Misi", `Bagian Visi & Misi lembaga telah diperbarui oleh Admin`, "sec-visi");
             };
             openModal();
         }
@@ -9885,7 +9866,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data akademik baru berhasil ditambahkan!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Informasi Akademik Baru", `Program akademik "${label}: ${nilai}" telah ditambahkan`, "sec-akademik");
             };
             openModal();
         }
@@ -9920,7 +9900,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Informasi akademik berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Informasi Akademik", `Program akademik "${label}" telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -9931,7 +9910,6 @@
             AppState.akademik.extraItems.splice(idx, 1);
             renderSchoolProfile();
             showToast("Item akademik berhasil dihapus!", "info");
-            ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Akademik", `Data informasi tambahan akademik telah diperbarui`, "sec-akademik");
         }
 
         function openDeleteAkademikModal() {
@@ -9968,7 +9946,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data akademik terpilih berhasil dihapus!", "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Akademik", `Bagian informasi akademik telah diperbarui oleh Admin`, "sec-akademik");
             };
             openModal();
         }
@@ -10007,7 +9984,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data ekstrakurikuler berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Ekstrakurikuler", `Kegiatan ekstrakurikuler "${nama}" telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10060,7 +10036,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data prestasi berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Prestasi", `Data prestasi "${judul}" (${pemenang}) telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10113,7 +10088,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast("Data sarana & prasarana berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Fasilitas "${nama}" (${jumlah}) telah diperbarui`, "sec-sarpras");
             };
             openModal();
         }
@@ -10326,7 +10300,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIds.length} pengurus berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Struktur Organisasi", `Susunan pengurus struktur organisasi telah diperbarui`, "sec-organisasi");
             };
             openModal();
         }
@@ -10391,7 +10364,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} ekstrakurikuler berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Ekstrakurikuler", `Daftar kegiatan ekstrakurikuler santri telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10462,7 +10434,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} prestasi berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Data Prestasi", `Daftar prestasi siswa & pendidik telah diperbarui`, "sec-akademik");
             };
             openModal();
         }
@@ -10533,7 +10504,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} fasilitas berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Sarana & Prasarana", `Daftar fasilitas sarana & prasarana sekolah telah diperbarui`, "sec-sarpras");
             };
             openModal();
         }
@@ -10604,7 +10574,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIds.length} berita berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Berita Sekolah", `Daftar kabar & berita kegiatan sekolah telah diperbarui`, "sec-berita");
             };
             openModal();
         }
@@ -10675,7 +10644,6 @@
                 renderSchoolProfile();
                 closeModal();
                 showToast(`${checkedIdx.length} agenda berhasil dihapus!`, "info");
-                ElwaNotificationManager.notifySchoolUpdate("Pembaruan Agenda Sekolah", `Jadwal agenda kegiatan terdekat telah diperbarui`, "sec-berita");
             };
             openModal();
         }
@@ -11049,7 +11017,6 @@
                 openUbahStatusUangJajanModal();
             }
             showToast("Catatan penggunaan uang jajan dihapus", "info");
-            ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Riwayat Penggunaan Uang Jajan", `Daftar riwayat penggunaan uang jajan ananda ${child.nama} telah diperbarui.`, "keuangan");
         }
 
         function openBayarTagihanModal(posName, nominal) {
@@ -11230,7 +11197,6 @@
                 renderChildPortal();
                 closeModal();
                 showToast("Link WhatsApp Musyrif berhasil diperbarui!", "success");
-                ElwaNotificationManager.notifyStudentUpdate(AppState.activeChildIdx, "Kontak Musyrif Asrama", `Informasi Musyrif pembina asrama (${child.musyrif}) untuk ananda ${child.nama} telah diperbarui.`, "catatan");
             };
             openModal();
         }
@@ -12005,9 +11971,6 @@
 
                 this.isFetching = true;
                 try {
-                    const prevSnap = JSON.parse(JSON.stringify(this.getSnapshot()));
-                    const prevHash = this.lastSyncedHash || JSON.stringify(prevSnap);
-
                     const { data, error } = await this.client
                         .from(SUPABASE_CONFIG.mainTable)
                         .select("*")
@@ -12029,16 +11992,13 @@
                         this.applyDatabaseRecord(data);
                         const newSnap = this.getSnapshot();
                         const newHash = JSON.stringify(newSnap);
-                        const hasChanged = newHash !== prevHash;
-
-                        if (isInitialLoad || hasChanged) {
+                        if (isInitialLoad || newHash !== this.lastSyncedHash) {
                             this.lastSyncedHash = newHash;
                             this.saveLocalBackup(newSnap);
                             renderDashboard();
-                        }
-
-                        if (typeof ElwaNotificationManager !== 'undefined') {
-                            ElwaNotificationManager.checkIncomingRemoteNotifications(prevSnap, newSnap, isInitialLoad, hasChanged);
+                            if (!isInitialLoad && typeof ElwaNotificationManager !== 'undefined') {
+                                ElwaNotificationManager.checkIncomingRemoteNotifications();
+                            }
                         }
                     } else if (isInitialLoad) {
                         // Tabel di Supabase masih kosong: simpan seluruh data awal ke Supabase (Auto-Seed)
@@ -12052,13 +12012,25 @@
                 }
             },
 
-            // Cek pembaruan dari perangkat lain secara langsung ke tabel utama
+            // Cek secara ringan apakah ada pembaruan dari perangkat lain berdasarkan updated_at
             async checkRemoteUpdate() {
                 if (!this.client || !this.isConfigured || !this.isReady || this.isSyncing || this.isFetching) {
                     return;
                 }
                 try {
-                    await this.fetchFromSupabase(false);
+                    const { data, error } = await this.client
+                        .from(SUPABASE_CONFIG.mainTable)
+                        .select("updated_at")
+                        .eq("id", SUPABASE_CONFIG.recordId)
+                        .maybeSingle();
+
+                    if (!error && data && data.updated_at) {
+                        if (this.lastRemoteUpdatedAt && data.updated_at !== this.lastRemoteUpdatedAt) {
+                            await this.fetchFromSupabase(false);
+                        } else if (!this.lastRemoteUpdatedAt) {
+                            this.lastRemoteUpdatedAt = data.updated_at;
+                        }
+                    }
                 } catch (err) {}
             },
 
@@ -12300,29 +12272,9 @@
                     this.checkRemoteUpdate();
                 });
 
-                document.addEventListener("resume", () => {
-                    this.checkRemoteUpdate();
-                }, false);
-
                 document.addEventListener("visibilitychange", () => {
                     if (document.visibilityState === "visible") {
                         this.checkRemoteUpdate();
-                    }
-                });
-
-                window.addEventListener("storage", (ev) => {
-                    if (ev && ev.key === SUPABASE_CONFIG.localCacheKey && ev.newValue) {
-                        try {
-                            const prevSnap = JSON.parse(JSON.stringify(this.getSnapshot()));
-                            const parsed = JSON.parse(ev.newValue);
-                            this.applyDatabaseRecord({ payload: parsed });
-                            const newSnap = this.getSnapshot();
-                            this.lastSyncedHash = JSON.stringify(newSnap);
-                            renderDashboard();
-                            if (typeof ElwaNotificationManager !== 'undefined') {
-                                ElwaNotificationManager.checkIncomingRemoteNotifications(prevSnap, newSnap, false, true);
-                            }
-                        } catch (e) {}
                     }
                 });
             }
@@ -12410,479 +12362,17 @@
         let headsUpTimer = null;
         let currentHeadsUpNotifObj = null;
 
-        /* ===================================================================
-           MESIN SUARA NOTIFIKASI ANDROID APK & LAYANAN LATAR BELAKANG (24/7)
-           1. Menghasilkan suara notifikasi .WAV + Web Audio API + Getar HP
-           2. Menjaga aplikasi tetap hidup di latar belakang (Background Daemon:
-              Silent Audio Foreground Keep-Alive + WakeLock + Web Worker Polling)
-              sehingga meskipun pengguna TIDAK sedang membuka aplikasi ELWA
-              (di layar utama HP / membuka aplikasi lain / layar terkunci),
-              notifikasi dan suara tetap muncul di bar notifikasi sistem HP Android.
-           3. Menggunakan ikon bitmap PNG murni (bukan SVG) agar Android OS
-              NotificationManager tidak menolak pembuatan notifikasi status bar.
-           =================================================================== */
-        const ElwaAudioNotifEngine = {
-            audioCtx: null,
-            wavDataUri: null,
-            silentWavDataUri: null,
-            audioEl: null,
-            silentKeepAliveEl: null,
-            pngIconCache: null,
-            isUnlocked: false,
-
-            init() {
-                this.buildNotificationWavDataUri();
-                this.buildSilentKeepAliveWavDataUri();
-                this.ensureAudioElement();
-                this.setupAutoUnlockAndKeepAlive();
-            },
-
-            // Buat ikon PNG 128x128 valid untuk Android NotificationManager (Android menolak SVG pada icon notifikasi sistem)
-            getValidPngNotificationIcon() {
-                if (this.pngIconCache) return this.pngIconCache;
-                try {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = 128;
-                    canvas.height = 128;
-                    const ctx = canvas.getContext("2d");
-                    // Background hijau pesantren
-                    ctx.fillStyle = "#0B3B2C";
-                    ctx.beginPath();
-                    ctx.arc(64, 64, 60, 0, Math.PI * 2);
-                    ctx.fill();
-                    // Lingkaran emas
-                    ctx.lineWidth = 6;
-                    ctx.strokeStyle = "#F59E0B";
-                    ctx.stroke();
-                    // Tulisan ELWA
-                    ctx.fillStyle = "#FBBF24";
-                    ctx.font = "bold 34px sans-serif";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    ctx.fillText("ELWA", 64, 66);
-                    this.pngIconCache = canvas.toDataURL("image/png");
-                } catch (e) {
-                    this.pngIconCache = undefined;
-                }
-                return this.pngIconCache;
-            },
-
-            // Buat file audio .WAV 16-bit PCM asli di memori (Nada Lonceng Kristal 3-Nada khas Notifikasi HP Android)
-            buildNotificationWavDataUri() {
-                if (this.wavDataUri) return this.wavDataUri;
-                try {
-                    const sampleRate = 22050;
-                    const durationSec = 1.15;
-                    const numSamples = Math.floor(sampleRate * durationSec);
-                    const buffer = new ArrayBuffer(44 + numSamples * 2);
-                    const view = new DataView(buffer);
-
-                    const writeStr = (offset, str) => {
-                        for (let i = 0; i < str.length; i++) {
-                            view.setUint8(offset + i, str.charCodeAt(i));
-                        }
-                    };
-
-                    writeStr(0, "RIFF");
-                    view.setUint32(4, 36 + numSamples * 2, true);
-                    writeStr(8, "WAVE");
-                    writeStr(12, "fmt ");
-                    view.setUint32(16, 16, true);
-                    view.setUint16(20, 1, true);
-                    view.setUint16(22, 1, true);
-                    view.setUint32(24, sampleRate, true);
-                    view.setUint32(28, sampleRate * 2, true);
-                    view.setUint16(32, 2, true);
-                    view.setUint16(34, 16, true);
-                    writeStr(36, "data");
-                    view.setUint32(40, numSamples * 2, true);
-
-                    const notes = [
-                        { start: 0.0, freq: 880.0, decay: 7.5, amp: 0.55 },
-                        { start: 0.15, freq: 1174.66, decay: 7.0, amp: 0.60 },
-                        { start: 0.30, freq: 1760.0, decay: 4.2, amp: 0.75 },
-                        { start: 0.62, freq: 1318.51, decay: 7.0, amp: 0.45 },
-                        { start: 0.76, freq: 1760.0, decay: 4.5, amp: 0.65 }
-                    ];
-
-                    for (let i = 0; i < numSamples; i++) {
-                        const t = i / sampleRate;
-                        let sample = 0;
-                        for (let n = 0; n < notes.length; n++) {
-                            const nt = notes[n];
-                            if (t >= nt.start) {
-                                const dt = t - nt.start;
-                                const env = Math.min(1, dt / 0.006) * Math.exp(-dt * nt.decay);
-                                sample += env * nt.amp * (
-                                    0.72 * Math.sin(2 * Math.PI * nt.freq * dt) +
-                                    0.28 * Math.sin(2 * Math.PI * (nt.freq * 2) * dt)
-                                );
-                            }
-                        }
-                        sample = Math.max(-0.98, Math.min(0.98, sample));
-                        view.setInt16(44 + i * 2, Math.floor(sample * 32767), true);
-                    }
-
-                    const bytes = new Uint8Array(buffer);
-                    let binary = "";
-                    const chunkSize = 8192;
-                    for (let i = 0; i < bytes.length; i += chunkSize) {
-                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-                    }
-                    this.wavDataUri = "data:audio/wav;base64," + btoa(binary);
-                } catch (err) {}
-                return this.wavDataUri;
-            },
-
-            // Buat file audio .WAV hening (silent loop) agar Android OS menjaga proses WebView tetap hidup di latar belakang
-            buildSilentKeepAliveWavDataUri() {
-                if (this.silentWavDataUri) return this.silentWavDataUri;
-                try {
-                    const sampleRate = 8000;
-                    const numSamples = 8000; // 1 detik hening
-                    const buffer = new ArrayBuffer(44 + numSamples * 2);
-                    const view = new DataView(buffer);
-                    const writeStr = (offset, str) => {
-                        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-                    };
-                    writeStr(0, "RIFF");
-                    view.setUint32(4, 36 + numSamples * 2, true);
-                    writeStr(8, "WAVE");
-                    writeStr(12, "fmt ");
-                    view.setUint32(16, 16, true);
-                    view.setUint16(20, 1, true);
-                    view.setUint16(22, 1, true);
-                    view.setUint32(24, sampleRate, true);
-                    view.setUint32(28, sampleRate * 2, true);
-                    view.setUint16(32, 2, true);
-                    view.setUint16(34, 16, true);
-                    writeStr(36, "data");
-                    view.setUint32(40, numSamples * 2, true);
-                    for (let i = 0; i < numSamples; i++) {
-                        view.setInt16(44 + i * 2, 1, true);
-                    }
-                    const bytes = new Uint8Array(buffer);
-                    let binary = "";
-                    for (let i = 0; i < bytes.length; i += 4096) {
-                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 4096));
-                    }
-                    this.silentWavDataUri = "data:audio/wav;base64," + btoa(binary);
-                } catch (e) {}
-                return this.silentWavDataUri;
-            },
-
-            ensureAudioElement() {
-                if (this.audioEl) return this.audioEl;
-                try {
-                    let el = document.getElementById("elwaHiddenNotifAudio");
-                    if (!el) {
-                        el = document.createElement("audio");
-                        el.id = "elwaHiddenNotifAudio";
-                        el.preload = "auto";
-                        el.style.display = "none";
-                        if (this.wavDataUri) el.src = this.wavDataUri;
-                        document.body.appendChild(el);
-                    }
-                    this.audioEl = el;
-                } catch (e) {}
-                return this.audioEl;
-            },
-
-            startSilentBackgroundKeepAlive() {
-                try {
-                    if (!this.silentKeepAliveEl) {
-                        const uri = this.buildSilentKeepAliveWavDataUri();
-                        if (!uri) return;
-                        const sEl = document.createElement("audio");
-                        sEl.id = "elwaSilentKeepAliveAudio";
-                        sEl.src = uri;
-                        sEl.loop = true;
-                        sEl.volume = 0.01;
-                        sEl.style.display = "none";
-                        document.body.appendChild(sEl);
-                        this.silentKeepAliveEl = sEl;
-                    }
-                    if (this.silentKeepAliveEl && this.silentKeepAliveEl.paused) {
-                        this.silentKeepAliveEl.play().catch(() => {});
-                    }
-                } catch (e) {}
-            },
-
-            setupAutoUnlockAndKeepAlive() {
-                const unlock = () => {
-                    try {
-                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                        if (AudioCtx) {
-                            if (!this.audioCtx) this.audioCtx = new AudioCtx();
-                            if (this.audioCtx.state === "suspended") {
-                                this.audioCtx.resume();
-                            }
-                            if (!this.isUnlocked) {
-                                const buf = this.audioCtx.createBuffer(1, 1, 22050);
-                                const src = this.audioCtx.createBufferSource();
-                                src.buffer = buf;
-                                src.connect(this.audioCtx.destination);
-                                src.start(0);
-                            }
-                        }
-                        this.startSilentBackgroundKeepAlive();
-                        this.isUnlocked = true;
-                    } catch (e) {}
-                };
-                document.addEventListener("touchstart", unlock, { passive: true });
-                document.addEventListener("touchend", unlock, { passive: true });
-                document.addEventListener("click", unlock, { passive: true });
-                document.addEventListener("keydown", unlock, { passive: true });
-            },
-
-            playNotificationSound() {
-                try {
-                    const uri = this.buildNotificationWavDataUri();
-                    if (uri) {
-                        const player = new Audio(uri);
-                        player.volume = 1.0;
-                        const playPromise = player.play();
-                        if (playPromise && typeof playPromise.catch === "function") {
-                            playPromise.catch(() => {
-                                const fallbackEl = this.ensureAudioElement();
-                                if (fallbackEl) {
-                                    fallbackEl.currentTime = 0;
-                                    fallbackEl.volume = 1.0;
-                                    fallbackEl.play().catch(() => {});
-                                }
-                            });
-                        }
-                    }
-                } catch (e) {}
-
-                try {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        if (!this.audioCtx) this.audioCtx = new AudioCtx();
-                        if (this.audioCtx.state === "suspended") {
-                            this.audioCtx.resume().catch(() => {});
-                        }
-                        const ctx = this.audioCtx;
-                        const now = ctx.currentTime;
-                        const chimeNotes = [
-                            { t: 0.0, f: 880.0, d: 0.22 },
-                            { t: 0.15, f: 1174.66, d: 0.22 },
-                            { t: 0.30, f: 1760.0, d: 0.40 }
-                        ];
-                        chimeNotes.forEach(cn => {
-                            const osc = ctx.createOscillator();
-                            const gain = ctx.createGain();
-                            osc.type = "triangle";
-                            osc.frequency.setValueAtTime(cn.f, now + cn.t);
-                            gain.gain.setValueAtTime(0.001, now + cn.t);
-                            gain.gain.exponentialRampToValueAtTime(0.38, now + cn.t + 0.015);
-                            gain.gain.exponentialRampToValueAtTime(0.0001, now + cn.t + cn.d);
-                            osc.connect(gain);
-                            gain.connect(ctx.destination);
-                            osc.start(now + cn.t);
-                            osc.stop(now + cn.t + cn.d + 0.02);
-                        });
-                    }
-                } catch (e) {}
-
-                try {
-                    if (navigator.vibrate) {
-                        navigator.vibrate([300, 120, 300, 120, 450]);
-                    }
-                } catch (e) {}
-            }
-        };
-
-        /* ===================================================================
-           DAEMON LATAR BELAKANG ANDROID (WEB WORKER + WAKELOCK + NATIVE MODE)
-           Memastikan aplikasi tetap memantau database Supabase di latar belakang
-           meskipun pengguna sedang keluar dari aplikasi / di layar utama HP!
-           =================================================================== */
-        const ElwaBackgroundDaemon = {
-            worker: null,
-            wakeLockSentinel: null,
-            pendingBackgroundEchoNotif: null,
-            pendingBackgroundEchoTime: 0,
-
-            init() {
-                this.enableNativeBackgroundMode();
-                this.startBackgroundWebWorker();
-                this.requestWakeLock();
-
-                document.addEventListener("visibilitychange", () => {
-                    if (document.visibilityState === "hidden") {
-                        // Pastikan silent audio keep-alive aktif saat aplikasi diminimize ke latar belakang
-                        ElwaAudioNotifEngine.startSilentBackgroundKeepAlive();
-                        if (typeof ElwaSupabaseDB !== "undefined") {
-                            ElwaSupabaseDB.checkRemoteUpdate();
-                        }
-                        // Jika pengguna baru saja melakukan perubahan (< 20 detik lalu) lalu keluar dari aplikasi (untuk menguji di 1 HP),
-                        // kirimkan notifikasi sistem HP saat berada di luar aplikasi!
-                        if (this.pendingBackgroundEchoNotif && (Date.now() - this.pendingBackgroundEchoTime < 20000)) {
-                            const echoNotif = this.pendingBackgroundEchoNotif;
-                            this.pendingBackgroundEchoNotif = null;
-                            setTimeout(() => {
-                                if (document.visibilityState === "hidden") {
-                                    ElwaNotificationManager.dispatchNativeOsNotification(echoNotif.title, echoNotif.body, echoNotif);
-                                }
-                            }, 2200);
-                        }
-                    } else if (document.visibilityState === "visible") {
-                        this.requestWakeLock();
-                        if (typeof ElwaSupabaseDB !== "undefined") {
-                            ElwaSupabaseDB.checkRemoteUpdate();
-                        }
-                    }
-                });
-            },
-
-            enableNativeBackgroundMode() {
-                try {
-                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.backgroundMode) {
-                        window.cordova.plugins.backgroundMode.setDefaults({
-                            title: "ELWA CONECT Aktif",
-                            text: "Memantau pemberitahuan sekolah & santri secara otomatis",
-                            silent: true,
-                            hidden: true
-                        });
-                        window.cordova.plugins.backgroundMode.enable();
-                    }
-                    if (window.Android && typeof window.Android.enableBackgroundMode === "function") {
-                        window.Android.enableBackgroundMode(true);
-                    }
-                    if (window.Website2APK && typeof window.Website2APK.askEnableNotification === "function") {
-                        window.Website2APK.askEnableNotification();
-                    }
-                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                        window.Capacitor.Plugins.LocalNotifications.requestPermissions().catch(() => {});
-                    }
-                } catch (e) {}
-            },
-
-            async requestWakeLock() {
-                try {
-                    if ("wakeLock" in navigator && document.visibilityState === "visible") {
-                        this.wakeLockSentinel = await navigator.wakeLock.request("screen");
-                    }
-                } catch (e) {}
-            },
-
-            // Web Worker berjalan di thread terpisah yang TIDAK dibekukan saat WebView berada di latar belakang
-            startBackgroundWebWorker() {
-                if (this.worker) return;
-                try {
-                    const workerCode = `
-                        let pollCfg = null;
-                        let lastUpdated = null;
-
-                        self.onmessage = function(e) {
-                            if (e.data && e.data.type === 'CONFIG') {
-                                pollCfg = e.data.config;
-                            }
-                        };
-
-                        setInterval(async function() {
-                            self.postMessage({ type: 'BACKGROUND_TICK', ts: Date.now() });
-                            if (pollCfg && pollCfg.valid && pollCfg.url && pollCfg.key) {
-                                try {
-                                    const endpoint = pollCfg.url.replace(/\/+$/, '') + '/rest/v1/' + pollCfg.mainTable + '?id=eq.' + encodeURIComponent(pollCfg.recordId) + '&select=updated_at';
-                                    const res = await fetch(endpoint, {
-                                        method: 'GET',
-                                        headers: {
-                                            'apikey': pollCfg.key,
-                                            'Authorization': 'Bearer ' + pollCfg.key,
-                                            'Cache-Control': 'no-cache'
-                                        }
-                                    });
-                                    if (res.ok) {
-                                        const arr = await res.json();
-                                        if (Array.isArray(arr) && arr[0] && arr[0].updated_at) {
-                                            if (lastUpdated && arr[0].updated_at !== lastUpdated) {
-                                                lastUpdated = arr[0].updated_at;
-                                                self.postMessage({ type: 'WORKER_REMOTE_CHANGED', updated_at: lastUpdated });
-                                            } else if (!lastUpdated) {
-                                                lastUpdated = arr[0].updated_at;
-                                            }
-                                        }
-                                    }
-                                } catch (err) {}
-                            }
-                        }, 2000);
-                    `;
-                    const blob = new Blob([workerCode], { type: "application/javascript" });
-                    this.worker = new Worker(URL.createObjectURL(blob));
-                    this.worker.onmessage = (e) => {
-                        if (!e.data) return;
-                        if (e.data.type === "BACKGROUND_TICK" || e.data.type === "WORKER_REMOTE_CHANGED") {
-                            if (typeof ElwaSupabaseDB !== "undefined" && ElwaSupabaseDB.isReady) {
-                                ElwaSupabaseDB.checkRemoteUpdate();
-                            }
-                        }
-                    };
-                    this.syncWorkerConfig();
-                } catch (e) {}
-            },
-
-            syncWorkerConfig() {
-                if (!this.worker || typeof ElwaSupabaseDB === "undefined") return;
-                try {
-                    const creds = ElwaSupabaseDB.checkCredentials();
-                    this.worker.postMessage({
-                        type: "CONFIG",
-                        config: {
-                            valid: creds.valid,
-                            url: creds.url,
-                            key: creds.key,
-                            mainTable: SUPABASE_CONFIG.mainTable,
-                            recordId: SUPABASE_CONFIG.recordId
-                        }
-                    });
-                } catch (e) {}
-            }
-        };
-
         const ElwaNotificationManager = {
-            lastSeenStorageKey: "ELWA_LAST_SEEN_NOTIF_ID_V2",
             lastSeenNotifId: 1730000002,
 
-            getLastSeenNotifId() {
-                try {
-                    const saved = localStorage.getItem(this.lastSeenStorageKey);
-                    if (saved) {
-                        const num = Number(saved);
-                        if (!isNaN(num) && num > 0) return num;
-                    }
-                } catch (e) {}
-                return this.lastSeenNotifId;
-            },
-
-            setLastSeenNotifId(id) {
-                const num = Number(id) || Date.now();
-                this.lastSeenNotifId = num;
-                try {
-                    localStorage.setItem(this.lastSeenStorageKey, String(num));
-                } catch (e) {}
-            },
-
             init() {
-                ElwaAudioNotifEngine.init();
-                ElwaBackgroundDaemon.init();
                 this.syncBadgeCount();
+                const feed = AppState.notificationsFeed || [];
+                if (feed.length > 0 && feed[0].id > this.lastSeenNotifId) {
+                    this.lastSeenNotifId = feed[0].id;
+                }
 
-                try {
-                    const existingSaved = localStorage.getItem(this.lastSeenStorageKey);
-                    if (existingSaved) {
-                        this.lastSeenNotifId = Number(existingSaved) || 1730000002;
-                    } else {
-                        const feed = AppState.notificationsFeed || [];
-                        const initialId = (feed.length > 0 && feed[0].id) ? Number(feed[0].id) : 1730000002;
-                        this.setLastSeenNotifId(initialId);
-                    }
-                } catch (e) {}
-
-                this.ensureServiceWorkerRegistered();
-
-                // Minta izin notifikasi sistem HP pada sentuhan pertama jika status masih default
+                // Minta izin notifikasi HP secara otomatis pada interaksi pertama jika didukung browser/HP
                 const requestOnceOnGesture = () => {
                     if ("Notification" in window && Notification.permission === "default") {
                         try {
@@ -12890,18 +12380,8 @@
                         } catch (e) {}
                     }
                     document.removeEventListener("click", requestOnceOnGesture);
-                    document.removeEventListener("touchstart", requestOnceOnGesture);
                 };
                 document.addEventListener("click", requestOnceOnGesture);
-                document.addEventListener("touchstart", requestOnceOnGesture, { passive: true });
-            },
-
-            ensureServiceWorkerRegistered() {
-                try {
-                    if (navigator.serviceWorker && (location.protocol === "https:" || location.hostname === "localhost")) {
-                        navigator.serviceWorker.register("./sw.js").catch(() => {});
-                    }
-                } catch (e) {}
             },
 
             getFormattedTime() {
@@ -12927,173 +12407,125 @@
                 }
             },
 
-            // Kirim Notifikasi Langsung ke Sistem Operasi HP Android (Status Bar HP di Luar Aplikasi) + Suara
+            // Kirim ke Status Bar Atas HP (Mengikuti Suara Notifikasi Bawaan HP Masing-Masing)
             dispatchNativeOsNotification(title, body, notifObj) {
-                const cleanTitle = String(title || "ELWA CONECT");
-                const cleanBody = String(body || "Ada pemberitahuan baru pada aplikasi ELWA CONECT");
-                const pngIcon = ElwaAudioNotifEngine.getValidPngNotificationIcon();
-
-                // 0. Bunyikan Suara Notifikasi + Getar HP
-                ElwaAudioNotifEngine.playNotificationSound();
-
-                // 1. Panggil seluruh jembatan Native Android APK (Website2APK, WebIntoApp, SmartWebView, Cordova, Capacitor, Kodular, Android Studio JavaScriptInterface)
+                // 1. Cek jembatan Native Android APK (Website2APK / Cordova / Capacitor / Custom WebView)
                 try {
-                    const bridgeTargets = [
-                        window.Android,
-                        window.AndroidInterface,
-                        window.AndroidFunction,
-                        window.Website2APK,
-                        window.WebIntoApp,
-                        window.SmartWebView,
-                        window.NativeAndroid,
-                        window.JSBridge,
-                        window.AndroidNotificationBridge,
-                        window.apk,
-                        window.webapp
-                    ];
-
-                    bridgeTargets.forEach(bridge => {
-                        if (!bridge) return;
-                        try {
-                            if (typeof bridge.showNotification === "function") {
-                                bridge.showNotification(cleanTitle, cleanBody);
-                            } else if (typeof bridge.postNotification === "function") {
-                                bridge.postNotification(cleanTitle, cleanBody);
-                            } else if (typeof bridge.sendNotification === "function") {
-                                bridge.sendNotification(cleanTitle, cleanBody);
-                            } else if (typeof bridge.createNotification === "function") {
-                                bridge.createNotification(cleanTitle, cleanBody);
-                            } else if (typeof bridge.notify === "function") {
-                                bridge.notify(cleanTitle, cleanBody);
-                            } else if (typeof bridge.pushNotification === "function") {
-                                bridge.pushNotification(cleanTitle, cleanBody);
-                            }
-                        } catch (bErr) {}
-                    });
-
-                    if (window.AppInventor && typeof window.AppInventor.setWebViewString === "function") {
-                        window.AppInventor.setWebViewString(JSON.stringify({
-                            type: "elwa_notification",
-                            title: cleanTitle,
-                            body: cleanBody,
-                            ts: Date.now()
-                        }));
-                    }
-
-                    if (window.median && window.median.localNotifications && typeof window.median.localNotifications.create === "function") {
-                        window.median.localNotifications.create({ title: cleanTitle, body: cleanBody });
-                    } else if (window.gonative && window.gonative.localNotifications && typeof window.gonative.localNotifications.create === "function") {
-                        window.gonative.localNotifications.create({ title: cleanTitle, body: cleanBody });
-                    }
-
-                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                    if (window.Android && typeof window.Android.showNotification === "function") {
+                        window.Android.showNotification(title, body);
+                    } else if (window.AndroidNotificationBridge && typeof window.AndroidNotificationBridge.postNotification === "function") {
+                        window.AndroidNotificationBridge.postNotification(title, body);
+                    } else if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                         window.Capacitor.Plugins.LocalNotifications.schedule({
                             notifications: [{
-                                title: cleanTitle,
-                                body: cleanBody,
+                                title,
+                                body,
                                 id: Math.floor(Date.now() % 2147483647),
-                                sound: "default",
-                                schedule: { at: new Date(Date.now() + 50) }
+                                schedule: { at: new Date(Date.now() + 100) }
                             }]
                         });
-                    }
-
-                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.notification && window.cordova.plugins.notification.local) {
+                    } else if (window.cordova && window.cordova.plugins && window.cordova.plugins.notification && window.cordova.plugins.notification.local) {
                         window.cordova.plugins.notification.local.schedule({
-                            id: Math.floor(Date.now() % 2147483647),
-                            title: cleanTitle,
-                            text: cleanBody,
-                            sound: true,
-                            vibrate: true,
-                            wakeup: true,
-                            priority: 2,
+                            title,
+                            text: body,
                             foreground: true
                         });
                     }
                 } catch (err) {}
 
-                // 2. Panggil Konstruktor Standar `new Notification()` secara SINKRON & LANGSUNG dengan ikon PNG valid
-                //    (Banyak APK Builder mem-polyfill window.Notification dan membutuhkan pemanggilan sinkron dengan opsi sederhana)
+                // 2. Standar Web Notification API & ServiceWorker (Android Chrome / Browser / PWA)
+                // Menggunakan silent: false (default) agar OS Android memutar suara notifikasi bawaan HP pengguna
                 try {
                     if ("Notification" in window) {
-                        const fireStandardNotif = () => {
-                            let created = false;
-                            // Coba dengan ikon PNG valid terlebih dahulu
-                            try {
-                                const n1 = new Notification(cleanTitle, {
-                                    body: cleanBody,
-                                    icon: pngIcon,
-                                    tag: "elwa-os-" + Date.now(),
-                                    silent: false
-                                });
-                                n1.onclick = () => {
-                                    window.focus();
-                                    this.openNotificationTarget(notifObj);
-                                };
-                                created = true;
-                            } catch (e1) {
-                                // Fallback paling murni { body } untuk WebView APK yang hanya menerima parameter minimal
-                                try {
-                                    const n2 = new Notification(cleanTitle, { body: cleanBody });
-                                    n2.onclick = () => {
+                        const options = {
+                            body,
+                            icon: AppState.profile.logoUrl || undefined,
+                            badge: AppState.profile.logoUrl || undefined,
+                            tag: "elwa-notif-" + Date.now(),
+                            renotify: true,
+                            silent: false,
+                            vibrate: [200, 100, 200],
+                            data: notifObj || {}
+                        };
+
+                        if (Notification.permission === "granted") {
+                            if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === "function") {
+                                navigator.serviceWorker.getRegistration().then(reg => {
+                                    if (reg && typeof reg.showNotification === "function") {
+                                        reg.showNotification(title, options);
+                                    } else {
+                                        const n = new Notification(title, options);
+                                        n.onclick = () => {
+                                            window.focus();
+                                            this.openNotificationTarget(notifObj);
+                                        };
+                                    }
+                                }).catch(() => {
+                                    const n = new Notification(title, options);
+                                    n.onclick = () => {
                                         window.focus();
                                         this.openNotificationTarget(notifObj);
                                     };
-                                    created = true;
-                                } catch (e2) {}
-                            }
-
-                            // 3. Jika berjalan di Android Chrome / WebAPK / PWA yang mewajibkan ServiceWorkerRegistration.showNotification
-                            if (!created && navigator.serviceWorker && typeof navigator.serviceWorker.getRegistrations === "function") {
-                                navigator.serviceWorker.getRegistrations().then(regs => {
-                                    const reg = regs && regs[0];
-                                    if (reg && typeof reg.showNotification === "function") {
-                                        reg.showNotification(cleanTitle, {
-                                            body: cleanBody,
-                                            icon: pngIcon,
-                                            badge: pngIcon,
-                                            tag: "elwa-sw-" + Date.now(),
-                                            renotify: true,
-                                            silent: false,
-                                            vibrate: [300, 120, 300, 120, 450],
-                                            data: notifObj || {}
-                                        }).catch(() => {});
-                                    }
-                                }).catch(() => {});
-                            }
-                        };
-
-                        if (Notification.permission === "granted" || typeof Notification.permission === "undefined") {
-                            fireStandardNotif();
-                        } else if (Notification.permission !== "denied") {
-                            try {
-                                const req = Notification.requestPermission(perm => {
-                                    if (perm === "granted") fireStandardNotif();
                                 });
-                                if (req && typeof req.then === "function") {
-                                    req.then(perm => {
-                                        if (perm === "granted") fireStandardNotif();
-                                    }).catch(() => {});
-                                }
-                            } catch (ePerm) {
-                                fireStandardNotif();
+                            } else {
+                                const n = new Notification(title, options);
+                                n.onclick = () => {
+                                    window.focus();
+                                    this.openNotificationTarget(notifObj);
+                                };
                             }
+                        } else if (Notification.permission === "default") {
+                            Notification.requestPermission().then(perm => {
+                                if (perm === "granted") {
+                                    const n = new Notification(title, options);
+                                    n.onclick = () => {
+                                        window.focus();
+                                        this.openNotificationTarget(notifObj);
+                                    };
+                                }
+                            }).catch(() => {});
                         }
                     }
                 } catch (err) {}
+
+                // Getar fisik HP bila didukung perangkat Android
+                try {
+                    if (navigator.vibrate) {
+                        navigator.vibrate([180, 90, 180]);
+                    }
+                } catch (e) {}
             },
 
-            // Tidak lagi memunculkan popup banner palsu di dalam aplikasi agar fokus penuh pada Notifikasi Sistem HP Android
+            // Tampilkan Banner Notifikasi Bar Atas HP (Heads-Up Notification)
             showHeadsUpBanner(notifObj) {
+                if (!notifObj) return;
                 currentHeadsUpNotifObj = notifObj;
                 const bar = document.getElementById('androidHeadsUpNotifBar');
-                if (bar) {
-                    bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
-                    bar.classList.add('-translate-y-40', 'opacity-0', 'pointer-events-none');
+                const titleEl = document.getElementById('headsUpNotifTitle');
+                const bodyEl = document.getElementById('headsUpNotifBody');
+                const timeEl = document.getElementById('headsUpNotifTime');
+                const iconEl = document.getElementById('headsUpNotifIcon');
+                if (!bar) return;
+
+                if (titleEl) titleEl.innerText = notifObj.title || 'Pemberitahuan Baru';
+                if (bodyEl) bodyEl.innerText = notifObj.body || '';
+                if (timeEl) timeEl.innerText = notifObj.timeLabel || 'Baru saja';
+                if (iconEl) {
+                    iconEl.className = notifObj.type === 'school'
+                        ? 'fa-solid fa-school animate-bounce'
+                        : 'fa-solid fa-user-shield animate-bounce';
                 }
+
+                bar.classList.remove('-translate-y-40', 'opacity-0', 'pointer-events-none');
+                bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+
+                if (headsUpTimer) clearTimeout(headsUpTimer);
+                headsUpTimer = setTimeout(() => {
+                    dismissHeadsUpNotif();
+                }, 6500);
             },
 
-            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil di Notifikasi HP)
+            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil Sesuai Pembaruan Sekolah)
             notifySchoolUpdate(title, bodyText, targetSection = 'sec-profil') {
                 const notifObj = {
                     id: Date.now(),
@@ -13109,21 +12541,17 @@
                 AppState.notificationsFeed.unshift(notifObj);
                 if (AppState.notificationsFeed.length > 40) AppState.notificationsFeed.pop();
 
-                this.setLastSeenNotifId(notifObj.id);
+                this.lastSeenNotifId = notifObj.id;
                 this.syncBadgeCount();
-                ElwaBackgroundDaemon.pendingBackgroundEchoNotif = notifObj;
-                ElwaBackgroundDaemon.pendingBackgroundEchoTime = Date.now();
+                this.showHeadsUpBanner(notifObj);
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
-                if (typeof ElwaSupabaseDB !== 'undefined') {
-                    ElwaSupabaseDB.saveLocalBackup(ElwaSupabaseDB.getSnapshot());
-                    if (ElwaSupabaseDB.isReady) {
-                        ElwaSupabaseDB.syncToSupabase(true);
-                    }
+                if (typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
+                    ElwaSupabaseDB.scheduleSync(60);
                 }
             },
 
-            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga di Notifikasi HP, Detail Muncul Setelah Password)
+            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga di Bar Atas HP, Detail Muncul Setelah Password)
             notifyStudentUpdate(childIdx, kategori, rincianDetail, tabTarget = 'capaian') {
                 const idx = typeof childIdx === 'number' ? childIdx : AppState.activeChildIdx;
                 const child = AppState.children[idx];
@@ -13132,6 +12560,7 @@
                 const roleSender = getRoleDisplayName(AppState.activeRole) || 'Pengelola Sekolah';
                 const timeStr = this.getFormattedTime();
 
+                // Simpan rincian spesifik secara privat di dalam objek santri (hanya terlihat setelah verifikasi password)
                 if (!Array.isArray(child.pendingUpdates)) child.pendingUpdates = [];
                 child.pendingUpdates.unshift({
                     id: Date.now() + Math.floor(Math.random() * 100),
@@ -13144,6 +12573,7 @@
                 });
                 if (child.pendingUpdates.length > 25) child.pendingUpdates.pop();
 
+                // Pesan Notifikasi di Bar Atas HP (Tanpa menyebutkan bagian yang diperbarui demi privasi)
                 const privacyBody = `Ada pemberitahuan atas nama ${child.nama} kelas ${child.kelas}`;
                 const notifObj = {
                     id: Date.now(),
@@ -13161,20 +12591,16 @@
                 AppState.notificationsFeed.unshift(notifObj);
                 if (AppState.notificationsFeed.length > 40) AppState.notificationsFeed.pop();
 
-                this.setLastSeenNotifId(notifObj.id);
+                this.lastSeenNotifId = notifObj.id;
                 this.syncBadgeCount();
                 renderStudentList();
                 renderStudentPrivateUpdatesBanner(AppState.children[AppState.activeChildIdx]);
 
-                ElwaBackgroundDaemon.pendingBackgroundEchoNotif = notifObj;
-                ElwaBackgroundDaemon.pendingBackgroundEchoTime = Date.now();
+                this.showHeadsUpBanner(notifObj);
                 this.dispatchNativeOsNotification(notifObj.title, notifObj.body, notifObj);
 
-                if (typeof ElwaSupabaseDB !== 'undefined') {
-                    ElwaSupabaseDB.saveLocalBackup(ElwaSupabaseDB.getSnapshot());
-                    if (ElwaSupabaseDB.isReady) {
-                        ElwaSupabaseDB.syncToSupabase(true);
-                    }
+                if (typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
+                    ElwaSupabaseDB.scheduleSync(60);
                 }
             },
 
@@ -13203,6 +12629,8 @@
                     closeModal();
                     switchView('studentList');
 
+                    // Jika masih di Mode Wali Santri / Biasa, wajib minta password santri terlebih dahulu
+                    // (Atau jika sudah dibuka sebelumnya, tetap tampilkan rincian pembaruannya!)
                     const isStaffRole = AppState.editMode && (AppState.activeRole === 'Super Admin' || AppState.activeRole === 'Guru' || AppState.activeRole === 'Evaluator');
                     const isUnlocked = (AppState.unlockedStudentIndices || []).includes(targetIdx);
 
@@ -13219,70 +12647,16 @@
                 }
             },
 
-            // Cek apakah ada notifikasi baru atau perubahan data dari perangkat lain via Supabase (Termasuk saat aplikasi di latar belakang)
-            checkIncomingRemoteNotifications(prevSnap, newSnap, isInitialLoad = false, hasDataChanged = false) {
+            // Cek apakah ada notifikasi baru yang masuk dari perangkat lain via Supabase
+            checkIncomingRemoteNotifications() {
                 const feed = AppState.notificationsFeed || [];
                 this.syncBadgeCount();
-                const lastSeen = this.getLastSeenNotifId();
-
                 if (feed.length > 0) {
                     const newest = feed[0];
-                    if (newest && Number(newest.id) > Number(lastSeen)) {
-                        this.setLastSeenNotifId(newest.id);
+                    if (newest && newest.id > this.lastSeenNotifId) {
+                        this.lastSeenNotifId = newest.id;
+                        this.showHeadsUpBanner(newest);
                         this.dispatchNativeOsNotification(newest.title, newest.body, newest);
-                        return;
-                    }
-                }
-
-                if (!isInitialLoad && hasDataChanged && prevSnap && newSnap) {
-                    const oldChildren = prevSnap.children || [];
-                    const newChildren = newSnap.children || [];
-                    for (let i = 0; i < newChildren.length; i++) {
-                        const nc = newChildren[i];
-                        const oc = oldChildren.find(c => c.nis === nc.nis) || oldChildren[i];
-                        if (!oc || JSON.stringify(oc) !== JSON.stringify(nc)) {
-                            const fallbackNotif = {
-                                id: Date.now(),
-                                type: 'student',
-                                childIdx: i,
-                                studentName: nc.nama,
-                                studentClass: nc.kelas,
-                                title: 'Pemberitahuan Data Santri',
-                                body: `Ada pemberitahuan atas nama ${nc.nama} kelas ${nc.kelas}`,
-                                timeLabel: this.getFormattedTime(),
-                                read: false
-                            };
-                            this.setLastSeenNotifId(fallbackNotif.id);
-                            this.dispatchNativeOsNotification(fallbackNotif.title, fallbackNotif.body, fallbackNotif);
-                            return;
-                        }
-                    }
-
-                    const schoolKeys = ['profile', 'visiMisi', 'organisasi', 'akademik', 'sarpras', 'berita', 'agenda', 'kontak'];
-                    for (const sk of schoolKeys) {
-                        if (JSON.stringify(prevSnap[sk]) !== JSON.stringify(newSnap[sk])) {
-                            let bodyMsg = `Terdapat pembaruan informasi sekolah pada ${AppState.profile.nama}`;
-                            let sec = 'sec-profil';
-                            if (sk === 'agenda' && Array.isArray(newSnap.agenda) && newSnap.agenda[0]) {
-                                bodyMsg = `Ada agenda terdekat pada tanggal ${newSnap.agenda[0].tanggal} yaitu ${newSnap.agenda[0].judul}`;
-                                sec = 'sec-berita';
-                            } else if (sk === 'berita' && Array.isArray(newSnap.berita) && newSnap.berita[0]) {
-                                bodyMsg = `Berita terbaru pada tanggal ${newSnap.berita[0].tanggal} yaitu ${newSnap.berita[0].judul}`;
-                                sec = 'sec-berita';
-                            }
-                            const schoolNotif = {
-                                id: Date.now(),
-                                type: 'school',
-                                title: 'Pembaruan Informasi Sekolah',
-                                body: bodyMsg,
-                                targetSection: sec,
-                                timeLabel: this.getFormattedTime(),
-                                read: false
-                            };
-                            this.setLastSeenNotifId(schoolNotif.id);
-                            this.dispatchNativeOsNotification(schoolNotif.title, schoolNotif.body, schoolNotif);
-                            return;
-                        }
                     }
                 }
             }
@@ -13713,11 +13087,7 @@
                 // 5. Proteksi "Tekan sekali lagi untuk keluar" saat berada di halaman paling awal
                 const now = Date.now();
                 if (now - this.lastBackExitTime < 2200) {
-                    if (window.cordova && window.cordova.plugins && window.cordova.plugins.backgroundMode && typeof window.cordova.plugins.backgroundMode.moveToBackground === 'function') {
-                        window.cordova.plugins.backgroundMode.moveToBackground();
-                    } else if (window.Android && typeof window.Android.moveTaskToBack === 'function') {
-                        window.Android.moveTaskToBack(true);
-                    } else if (navigator.app && typeof navigator.app.exitApp === 'function') {
+                    if (navigator.app && typeof navigator.app.exitApp === 'function') {
                         navigator.app.exitApp();
                     }
                     return false;
