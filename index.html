@@ -12409,7 +12409,8 @@
             // Terapkan data dari kolom-kolom tabel Supabase maupun payload JSONB ke AppState
             applyDatabaseRecord(row) {
                 if (!row || typeof row !== "object") return;
-                const payload = (row.payload && typeof row.payload === "object") ? row.payload : {};
+                const profileSnap = (row.profile && typeof row.profile === "object" && row.profile._fullAppSnapshot) ? row.profile._fullAppSnapshot : {};
+                const payload = (row.payload && typeof row.payload === "object" && Object.keys(row.payload).length > 0) ? row.payload : profileSnap;
 
                 const mapping = {
                     adminPassword: row.admin_password !== undefined && row.admin_password !== null ? row.admin_password : payload.adminPassword,
@@ -12528,7 +12529,13 @@
 
                 try {
                     this.client = window.supabase.createClient(creds.url || SUPABASE_CONFIG.url, creds.anonKey || SUPABASE_CONFIG.anonKey, {
-                        auth: { persistSession: false }
+                        auth: { persistSession: false },
+                        global: {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        }
                     });
                     this.isConfigured = true;
 
@@ -12575,7 +12582,8 @@
 
                     const hasData = data && (
                         (data.payload && Object.keys(data.payload).length > 0) ||
-                        (Array.isArray(data.children) && data.children.length > 0)
+                        (Array.isArray(data.children) && data.children.length > 0) ||
+                        (data.profile && Object.keys(data.profile).length > 0)
                     );
 
                     if (hasData) {
@@ -12670,8 +12678,56 @@
                         ? (AppState.activeRole === "Super Admin" ? "Admin" : (AppState.activeRole || "Pengelola"))
                         : "Orang Tua / Wali Santri";
 
-                    // 1. Upsert seluruh kolom lengkap ke tabel utama public.elwa_app_database
-                    const fullMainRow = {
+                    // Helper REST JSON murni yang kebal error Content-Type header & Primary Key constraint
+                    const creds = this.checkCredentials();
+                    const safeSaveRow = async (tableName, pkColumn, pkValue, rowObj) => {
+                        const cleanObj = JSON.parse(JSON.stringify(rowObj));
+                        // A. Cek apakah baris dengan kunci tersebut sudah ada di Supabase
+                        try {
+                            const { data: existingRow, error: checkErr } = await this.client
+                                .from(tableName)
+                                .select(pkColumn)
+                                .eq(pkColumn, pkValue)
+                                .maybeSingle();
+
+                            if (!checkErr && existingRow) {
+                                // Baris sudah ada -> gunakan UPDATE murni (tanpa parameter on_conflict)
+                                const { error: updErr } = await this.client
+                                    .from(tableName)
+                                    .update(cleanObj)
+                                    .eq(pkColumn, pkValue);
+                                if (!updErr) {
+                                    return { ok: true, error: null };
+                                }
+                                return { ok: false, error: updErr };
+                            } else if (!checkErr && !existingRow) {
+                                // Baris belum ada -> gunakan INSERT murni (tanpa parameter on_conflict)
+                                const { error: insErr } = await this.client
+                                    .from(tableName)
+                                    .insert([cleanObj]);
+                                if (!insErr) {
+                                    return { ok: true, error: null };
+                                }
+                                return { ok: false, error: insErr };
+                            }
+                        } catch (e) {}
+
+                        // B. Fallback upsert dengan array objek murni
+                        try {
+                            const { error: upsErr } = await this.client
+                                .from(tableName)
+                                .upsert([cleanObj], { onConflict: pkColumn });
+                            if (!upsErr) {
+                                return { ok: true, error: null };
+                            }
+                            return { ok: false, error: upsErr };
+                        } catch (err) {
+                            return { ok: false, error: { message: err.message || String(err) } };
+                        }
+                    };
+
+                    // 1. Simpan seluruh kolom lengkap ke tabel utama public.elwa_app_database
+                    const fullMainRow = JSON.parse(JSON.stringify({
                         id: SUPABASE_CONFIG.recordId,
                         admin_password: AppState.adminPassword || "adminpintar",
                         role_passwords: AppState.rolePasswords || {},
@@ -12688,113 +12744,107 @@
                         payload: snapshot,
                         updated_by_role: activeRoleName,
                         updated_at: nowIso
-                    };
+                    }));
 
-                    let { error: mainErr } = await this.client
-                        .from(SUPABASE_CONFIG.mainTable)
-                        .upsert(fullMainRow, { onConflict: "id" });
+                    let mainSave = await safeSaveRow(SUPABASE_CONFIG.mainTable, "id", SUPABASE_CONFIG.recordId, fullMainRow);
 
-                    // Fallback otomatis jika pengguna masih memakai tabel versi lama yang hanya memiliki kolom (id, payload, updated_at)
-                    if (mainErr) {
-                        const fallbackRes = await this.client
-                            .from(SUPABASE_CONFIG.mainTable)
-                            .upsert(
-                                {
-                                    id: SUPABASE_CONFIG.recordId,
-                                    payload: snapshot,
-                                    updated_at: nowIso
-                                },
-                                { onConflict: "id" }
-                            );
-                        mainErr = fallbackRes.error;
+                    // Fallback otomatis jika tabel hanya memiliki kolom dasar (id, admin_password, role_passwords, profile) atau (id, payload, updated_at)
+                    if (!mainSave.ok) {
+                        mainSave = await safeSaveRow(SUPABASE_CONFIG.mainTable, "id", SUPABASE_CONFIG.recordId, {
+                            id: SUPABASE_CONFIG.recordId,
+                            payload: snapshot,
+                            updated_at: nowIso
+                        });
+                    }
+                    if (!mainSave.ok) {
+                        mainSave = await safeSaveRow(SUPABASE_CONFIG.mainTable, "id", SUPABASE_CONFIG.recordId, {
+                            id: SUPABASE_CONFIG.recordId,
+                            admin_password: AppState.adminPassword || "adminpintar",
+                            role_passwords: AppState.rolePasswords || {},
+                            profile: {
+                                ...(AppState.profile || {}),
+                                _fullAppSnapshot: snapshot,
+                                _updatedAt: nowIso
+                            }
+                        });
                     }
 
-                    if (mainErr) {
-                        console.error("[ELWA Supabase] Gagal menyimpan ke elwa_app_database:", mainErr.message);
+                    if (!mainSave.ok) {
+                        console.warn("[ELWA Supabase] Info simpan elwa_app_database:", mainSave.error?.message || mainSave.error);
                     } else {
                         this.lastRemoteUpdatedAt = nowIso;
                     }
 
-                    // 2. Upsert data lengkap masing-masing santri (termasuk foto & seluruh sub-data) ke public.elwa_students
+                    // 2. Simpan data lengkap masing-masing santri ke public.elwa_students tanpa memicu error on_conflict
                     if (Array.isArray(AppState.children) && AppState.children.length > 0) {
-                        const fullStudentRows = AppState.children.map(c => ({
-                            nis: String(c.nis || c.nama),
-                            nama: c.nama || "",
-                            foto: c.foto || "",
-                            password: c.password || "",
-                            kelas: c.kelas || "",
-                            marhalah: c.marhalah || "",
-                            asrama: c.asrama || "",
-                            peminatan: c.peminatan || "",
-                            musyrif: c.musyrif || "",
-                            musyrif_wa_link: c.musyrifWaLink || "",
-                            wali_kelas: c.waliKelas || "",
-                            hafalan: c.hafalan || "",
-                            hafalan_recent: c.hafalanRecent || "",
-                            tahfidz_target: c.tahfidzTarget || "",
-                            tahfidz_progress: c.tahfidzProgress || "",
-                            akademik_rerata: c.akademikRerata || "",
-                            lencana: c.lencana || [],
-                            keuangan: c.keuangan || {},
-                            capaian_per_semester: c.capaianPerSemester || {},
-                            pelanggaran_list: c.pelanggaranList || [],
-                            hafalan_list: c.hafalanList || [],
-                            notifikasi: c.notifikasi || {},
-                            catatan_list: c.catatanList || [],
-                            data: c,
-                            updated_by_role: activeRoleName,
-                            updated_at: nowIso
-                        }));
-
-                        const { error: stuErr } = await this.client
-                            .from(SUPABASE_CONFIG.studentTable)
-                            .upsert(fullStudentRows, { onConflict: "nis" });
-
-                        // Fallback jika tabel elwa_students menggunakan kolom versi ringkas
-                        if (stuErr) {
-                            const basicStudentRows = AppState.children.map(c => ({
-                                nis: String(c.nis || c.nama),
+                        for (const c of AppState.children) {
+                            const stuNis = String(c.nis || c.nama);
+                            const fullStuObj = JSON.parse(JSON.stringify({
+                                nis: stuNis,
                                 nama: c.nama || "",
+                                foto: c.foto || "",
+                                password: c.password || "",
                                 kelas: c.kelas || "",
                                 marhalah: c.marhalah || "",
                                 asrama: c.asrama || "",
-                                password: c.password || "",
+                                peminatan: c.peminatan || "",
+                                musyrif: c.musyrif || "",
+                                musyrif_wa_link: c.musyrifWaLink || "",
+                                wali_kelas: c.waliKelas || "",
+                                hafalan: c.hafalan || "",
+                                hafalan_recent: c.hafalanRecent || "",
+                                tahfidz_target: c.tahfidzTarget || "",
+                                tahfidz_progress: c.tahfidzProgress || "",
+                                akademik_rerata: c.akademikRerata || "",
+                                lencana: c.lencana || [],
+                                keuangan: c.keuangan || {},
+                                capaian_per_semester: c.capaianPerSemester || {},
+                                pelanggaran_list: c.pelanggaranList || [],
+                                hafalan_list: c.hafalanList || [],
+                                notifikasi: c.notifikasi || {},
+                                catatan_list: c.catatanList || [],
                                 data: c,
+                                updated_by_role: activeRoleName,
                                 updated_at: nowIso
                             }));
-                            await this.client
-                                .from(SUPABASE_CONFIG.studentTable)
-                                .upsert(basicStudentRows, { onConflict: "nis" });
+                            const stuSave = await safeSaveRow(SUPABASE_CONFIG.studentTable, "nis", stuNis, fullStuObj);
+                            if (!stuSave.ok) {
+                                await safeSaveRow(SUPABASE_CONFIG.studentTable, "nis", stuNis, {
+                                    nis: stuNis,
+                                    nama: c.nama || "",
+                                    kelas: c.kelas || "",
+                                    marhalah: c.marhalah || "",
+                                    asrama: c.asrama || "",
+                                    password: c.password || "",
+                                    data: c,
+                                    updated_at: nowIso
+                                });
+                            }
                         }
                     }
 
-                    // 3. Upsert profil sekolah (beserta foto logo & banner) ke public.elwa_school_profile
+                    // 3. Simpan profil sekolah ke public.elwa_school_profile
                     if (AppState.profile) {
-                        await this.client
-                            .from(SUPABASE_CONFIG.schoolProfileTable)
-                            .upsert(
-                                {
-                                    id: "main",
-                                    nama: AppState.profile.nama || "",
-                                    npsn: AppState.profile.npsn || "",
-                                    akreditasi: AppState.profile.akreditasi || "",
-                                    motto: AppState.profile.motto || "",
-                                    alamat: AppState.profile.alamat || "",
-                                    maps_url: AppState.profile.mapsUrl || "",
-                                    sejarah: AppState.profile.sejarah || "",
-                                    logo_url: AppState.profile.logoUrl || "",
-                                    banner_url: AppState.profile.bannerUrl || "",
-                                    visi: (AppState.visiMisi && AppState.visiMisi.visi) || "",
-                                    misi: (AppState.visiMisi && AppState.visiMisi.misi) || [],
-                                    kurikulum: (AppState.akademik && AppState.akademik.kurikulum) || "",
-                                    keunggulan: (AppState.akademik && AppState.akademik.keunggulan) || "",
-                                    ekskul: (AppState.akademik && AppState.akademik.ekskul) || [],
-                                    prestasi: (AppState.akademik && AppState.akademik.prestasi) || [],
-                                    kontak: AppState.kontak || {},
-                                    updated_at: nowIso
-                                },
-                                { onConflict: "id" }
-                            );
+                        await safeSaveRow(SUPABASE_CONFIG.schoolProfileTable, "id", "main", {
+                            id: "main",
+                            nama: AppState.profile.nama || "",
+                            npsn: AppState.profile.npsn || "",
+                            akreditasi: AppState.profile.akreditasi || "",
+                            motto: AppState.profile.motto || "",
+                            alamat: AppState.profile.alamat || "",
+                            maps_url: AppState.profile.mapsUrl || "",
+                            sejarah: AppState.profile.sejarah || "",
+                            logo_url: AppState.profile.logoUrl || "",
+                            banner_url: AppState.profile.bannerUrl || "",
+                            visi: (AppState.visiMisi && AppState.visiMisi.visi) || "",
+                            misi: (AppState.visiMisi && AppState.visiMisi.misi) || [],
+                            kurikulum: (AppState.akademik && AppState.akademik.kurikulum) || "",
+                            keunggulan: (AppState.akademik && AppState.akademik.keunggulan) || "",
+                            ekskul: (AppState.akademik && AppState.akademik.ekskul) || [],
+                            prestasi: (AppState.akademik && AppState.akademik.prestasi) || [],
+                            kontak: AppState.kontak || {},
+                            updated_at: nowIso
+                        });
                     }
                 } catch (err) {
                     console.error("[ELWA Supabase] Exception saat sinkronisasi:", err);
