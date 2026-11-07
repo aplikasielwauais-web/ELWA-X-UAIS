@@ -3046,12 +3046,18 @@
             // Render Banner Rincian Pembaruan Privasi Santri (Muncul setelah dibuka dengan password)
             renderStudentPrivateUpdatesBanner(child);
 
-            // Notification Banner
+            // Notification Banner (Status sudah dilihat/ditutup tersimpan per Device/HP)
             const banner = document.getElementById('childNotificationBanner');
             const notifDot = document.getElementById('navChildDot');
             const tabDot = document.getElementById('catatanTabDot');
             if (banner) {
-                if (child.notifikasi && child.notifikasi.adaBaru) {
+                const isNotifUnreadOnThisDevice = Boolean(
+                    child.notifikasi &&
+                    child.notifikasi.adaBaru &&
+                    typeof ElwaNotificationManager !== 'undefined' &&
+                    !ElwaNotificationManager.isMusyrifBannerDismissedOnDevice(child)
+                );
+                if (isNotifUnreadOnThisDevice) {
                     banner.classList.remove('hidden');
                     const senderEl = document.getElementById('notifSender');
                     const snippetEl = document.getElementById('notifSnippet');
@@ -6544,7 +6550,7 @@
         function openVerifyStudentPasswordModal(idx, onCancelRevertSelector = false) {
             const child = AppState.children[idx];
             if (!child) return;
-            const unreadUpdates = (child.pendingUpdates || []).filter(u => !u.dibaca);
+            const unreadUpdates = (child.pendingUpdates || []).filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u));
 
             setModalTitle("Verifikasi Akses Wali Santri", "fa-lock");
             const saveBtn = document.getElementById('modalSaveBtn');
@@ -6614,7 +6620,7 @@
                     renderStudentList();
                     closeModal();
                     switchView('child');
-                    const pendingNow = (child.pendingUpdates || []).filter(u => !u.dibaca);
+                    const pendingNow = (child.pendingUpdates || []).filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u));
                     if (pendingNow.length > 0) {
                         setTimeout(() => {
                             openStudentUpdatesRevealModal(idx);
@@ -8141,9 +8147,9 @@
                             <div class="flex items-center justify-between gap-1">
                                 <div class="flex items-center space-x-1">
                                     <span class="text-[9px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">NIS: ${child.nis}</span>
-                                    ${((child.pendingUpdates || []).filter(u => !u.dibaca).length > 0) ? `
+                                    ${((child.pendingUpdates || []).filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u)).length > 0) ? `
                                         <span class="text-[8px] font-black bg-rose-600 text-white px-1.5 py-0.5 rounded-full animate-pulse flex items-center">
-                                            <i class="fa-solid fa-bell mr-1 text-[7px]"></i>${(child.pendingUpdates || []).filter(u => !u.dibaca).length} Info Baru
+                                            <i class="fa-solid fa-bell mr-1 text-[7px]"></i>${(child.pendingUpdates || []).filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u)).length} Info Baru
                                         </span>
                                     ` : ''}
                                 </div>
@@ -12181,8 +12187,9 @@
                 isNew: true
             });
 
-            // Aktifkan banner notifikasi catatan baru untuk orang tua pada santri tersebut
+            // Aktifkan banner notifikasi catatan baru untuk orang tua pada santri tersebut (dengan ID unik agar tiap HP mengecek status bacanya sendiri)
             child.notifikasi = {
+                id: Date.now(),
                 adaBaru: true,
                 pengirim: `${senderName} (${roleLabel})`,
                 pesan: noteContent
@@ -12196,7 +12203,9 @@
 
         function dismissNotification() {
             const child = AppState.children[AppState.activeChildIdx];
-            if (child.notifikasi) child.notifikasi.adaBaru = false;
+            if (child && typeof ElwaNotificationManager !== 'undefined') {
+                ElwaNotificationManager.dismissMusyrifBannerOnDevice(child);
+            }
             renderChildPortal();
         }
 
@@ -12895,9 +12904,7 @@
                 "deleteSingleFeedNotification",
                 "clearAllFeedNotificationsAdmin",
                 "submitParentReply",
-                "submitMusyrifNoteToParent",
-                "markNotificationRead",
-                "dismissNotification"
+                "submitMusyrifNoteToParent"
             ];
 
             mutationFunctions.forEach(fnName => {
@@ -12952,8 +12959,88 @@
         const ElwaNotificationManager = {
             lastSeenNotifId: 1730000002,
             RETENTION_MS: 7 * 24 * 60 * 60 * 1000, // 7 Hari otomatis bersih
+            DEVICE_READ_STORAGE_KEY: "ELWA_CONECT_DEVICE_READ_STATE_V1",
+            deviceReadState: {
+                readFeedIds: [],
+                readStudentUpdateIds: [],
+                dismissedMusyrifBannerKeys: []
+            },
+
+            // Muat daftar ID notifikasi yang sudah dibaca khusus di Device / HP ini saja
+            loadDeviceReadState() {
+                try {
+                    const raw = localStorage.getItem(this.DEVICE_READ_STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === "object") {
+                            this.deviceReadState = {
+                                readFeedIds: Array.isArray(parsed.readFeedIds) ? parsed.readFeedIds.map(Number) : [],
+                                readStudentUpdateIds: Array.isArray(parsed.readStudentUpdateIds) ? parsed.readStudentUpdateIds.map(Number) : [],
+                                dismissedMusyrifBannerKeys: Array.isArray(parsed.dismissedMusyrifBannerKeys) ? parsed.dismissedMusyrifBannerKeys.map(String) : []
+                            };
+                        }
+                    }
+                } catch (e) {}
+            },
+
+            // Simpan status baca khusus di Device / HP ini saja (tidak disinkronkan ke Supabase agar HP lain tidak ikut terbaca)
+            saveDeviceReadState() {
+                try {
+                    localStorage.setItem(this.DEVICE_READ_STORAGE_KEY, JSON.stringify(this.deviceReadState));
+                } catch (e) {}
+            },
+
+            isFeedReadOnDevice(notifObj) {
+                if (!notifObj) return true;
+                return this.deviceReadState.readFeedIds.includes(Number(notifObj.id));
+            },
+
+            markFeedReadOnDevice(notifId) {
+                const numId = Number(notifId);
+                if (!numId) return;
+                if (!this.deviceReadState.readFeedIds.includes(numId)) {
+                    this.deviceReadState.readFeedIds.push(numId);
+                    this.saveDeviceReadState();
+                }
+            },
+
+            isStudentUpdateReadOnDevice(updateObj) {
+                if (!updateObj) return true;
+                return this.deviceReadState.readStudentUpdateIds.includes(Number(updateObj.id));
+            },
+
+            markStudentUpdateReadOnDevice(updateId) {
+                const numId = Number(updateId);
+                if (!numId) return;
+                if (!this.deviceReadState.readStudentUpdateIds.includes(numId)) {
+                    this.deviceReadState.readStudentUpdateIds.push(numId);
+                    this.saveDeviceReadState();
+                }
+            },
+
+            getMusyrifBannerKey(child) {
+                if (!child || !child.notifikasi) return "";
+                const n = child.notifikasi;
+                return `${child.nis || child.nama}_${n.id || n.pesan || 'default'}`;
+            },
+
+            isMusyrifBannerDismissedOnDevice(child) {
+                const key = this.getMusyrifBannerKey(child);
+                if (!key) return false;
+                return this.deviceReadState.dismissedMusyrifBannerKeys.includes(key);
+            },
+
+            dismissMusyrifBannerOnDevice(child) {
+                const key = this.getMusyrifBannerKey(child);
+                if (!key) return;
+                if (!this.deviceReadState.dismissedMusyrifBannerKeys.includes(key)) {
+                    this.deviceReadState.dismissedMusyrifBannerKeys.push(key);
+                    this.saveDeviceReadState();
+                }
+            },
 
             init() {
+                this.loadDeviceReadState();
                 this.pruneExpiredNotifications();
                 this.syncBadgeCount();
                 const feed = AppState.notificationsFeed || [];
@@ -13049,10 +13136,11 @@
             },
 
             syncBadgeCount() {
+                this.loadDeviceReadState();
                 this.pruneExpiredNotifications();
                 let unreadStudentUpdates = 0;
                 (AppState.children || []).forEach(c => {
-                    unreadStudentUpdates += (c.pendingUpdates || []).filter(u => !u.dibaca).length;
+                    unreadStudentUpdates += (c.pendingUpdates || []).filter(u => !this.isStudentUpdateReadOnDevice(u)).length;
                 });
                 const dot = document.getElementById('appNotifDot');
                 if (dot) {
@@ -13063,8 +13151,8 @@
                     }
                 }
 
-                // Sinkronkan juga badge pada ikon lonceng di bar atas
-                const unreadFeedCount = (AppState.notificationsFeed || []).filter(n => !n.read).length;
+                // Sinkronkan badge angka pada ikon lonceng di bar atas khusus untuk Device / HP ini saja
+                const unreadFeedCount = (AppState.notificationsFeed || []).filter(n => !this.isFeedReadOnDevice(n)).length;
                 const bellBadge = document.getElementById('headerBellBadge');
                 if (bellBadge) {
                     if (unreadFeedCount > 0) {
@@ -13282,7 +13370,8 @@
 
             openNotificationTarget(notifObj) {
                 if (!notifObj) return;
-                notifObj.read = true;
+                // Tandai sudah dibaca HANYA di Device / HP ini (tidak mengubah properti global di Supabase)
+                this.markFeedReadOnDevice(notifObj.id);
                 this.syncBadgeCount();
                 dismissHeadsUpNotif();
 
@@ -13351,13 +13440,13 @@
             }
         }
 
-        // Render Banner Rincian Pembaruan pada Dashboard Anak (Hanya Terlihat Setelah Dibuka dengan Password)
+        // Render Banner Rincian Pembaruan pada Dashboard Anak (Hanya Terlihat Setelah Dibuka dengan Password & Status Baca Per Device/HP)
         function renderStudentPrivateUpdatesBanner(child) {
             const banner = document.getElementById('studentPrivateUpdatesBanner');
             const listEl = document.getElementById('studentPrivateUpdatesList');
             if (!banner || !listEl || !child) return;
 
-            const unread = (child.pendingUpdates || []).filter(u => !u.dibaca);
+            const unread = (child.pendingUpdates || []).filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u));
             if (unread.length === 0) {
                 banner.classList.add('hidden');
                 listEl.innerHTML = '';
@@ -13390,7 +13479,7 @@
             if (!child) return;
 
             const updates = child.pendingUpdates || [];
-            const unread = updates.filter(u => !u.dibaca);
+            const unread = updates.filter(u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u));
             const displayList = unread.length > 0 ? unread : updates.slice(0, 5);
 
             setModalTitle("Rincian Pemberitahuan Santri", "fa-bell");
@@ -13418,7 +13507,7 @@
                     ` : `
                         <div class="space-y-2 max-h-64 overflow-y-auto pr-0.5">
                             ${displayList.map(u => `
-                                <div class="p-3 rounded-2xl ${u.dibaca ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50/70 border-emerald-300'} border space-y-1.5">
+                                <div class="p-3 rounded-2xl ${ElwaNotificationManager.isStudentUpdateReadOnDevice(u) ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50/70 border-emerald-300'} border space-y-1.5">
                                     <div class="flex items-center justify-between">
                                         <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-elwa-dark text-amber-300">
                                             ${u.kategori}
@@ -13446,16 +13535,18 @@
 
         function openAndReadStudentUpdate(childIdx, updateId, tabTarget) {
             const child = AppState.children[childIdx];
-            if (child && Array.isArray(child.pendingUpdates)) {
-                const item = child.pendingUpdates.find(u => Number(u.id) === Number(updateId));
-                if (item) item.dibaca = true;
+            // Tandai dibaca khusus pada Device / HP ini saja
+            ElwaNotificationManager.markStudentUpdateReadOnDevice(updateId);
+            const remainingUnreadForChild = ((child && child.pendingUpdates) || []).filter(
+                u => !ElwaNotificationManager.isStudentUpdateReadOnDevice(u)
+            );
+            if (remainingUnreadForChild.length === 0) {
+                (AppState.notificationsFeed || []).forEach(n => {
+                    if (n.type === 'student' && (n.childIdx === childIdx || n.studentName === (child && child.nama))) {
+                        ElwaNotificationManager.markFeedReadOnDevice(n.id);
+                    }
+                });
             }
-            // Tandai juga di feed utama
-            (AppState.notificationsFeed || []).forEach(n => {
-                if (n.type === 'student' && (n.childIdx === childIdx || n.studentName === (child && child.nama))) {
-                    n.read = true;
-                }
-            });
             ElwaNotificationManager.syncBadgeCount();
             closeModal();
             switchView('child');
@@ -13467,17 +13558,19 @@
         function markAllStudentUpdatesRead(childIdx) {
             const child = AppState.children[childIdx];
             if (child && Array.isArray(child.pendingUpdates)) {
-                child.pendingUpdates.forEach(u => { u.dibaca = true; });
+                child.pendingUpdates.forEach(u => {
+                    ElwaNotificationManager.markStudentUpdateReadOnDevice(u.id);
+                });
             }
             (AppState.notificationsFeed || []).forEach(n => {
                 if (n.type === 'student' && (n.childIdx === childIdx || n.studentName === (child && child.nama))) {
-                    n.read = true;
+                    ElwaNotificationManager.markFeedReadOnDevice(n.id);
                 }
             });
             ElwaNotificationManager.syncBadgeCount();
             renderChildPortal();
             renderStudentList();
-            showToast("Seluruh pemberitahuan ditandai sudah dibaca", "info");
+            showToast("Seluruh pemberitahuan ditandai sudah dibaca di perangkat ini", "info");
         }
 
         // MODAL PUSAT NOTIFIKASI INFORMASI (IKON LONCENG DI ATAS - OTOMATIS BERSIH SETELAH 7 HARI + HAPUS MANUAL KHUSUS ADMIN)
@@ -13513,7 +13606,7 @@
                     <div class="flex items-center justify-between pt-1 gap-2 flex-wrap">
                         <span class="text-[10px] font-extrabold uppercase text-slate-500">Daftar Pemberitahuan (${feed.length})</span>
                         <div class="flex items-center space-x-2">
-                            ${feed.some(n => !n.read) ? `
+                            ${feed.some(n => !ElwaNotificationManager.isFeedReadOnDevice(n)) ? `
                                 <button type="button" onclick="markAllFeedNotificationsRead()" class="text-[10px] font-bold text-emerald-700 hover:underline">
                                     Tandai Semua Dibaca
                                 </button>
@@ -13534,8 +13627,10 @@
                         </div>
                     ` : `
                         <div class="space-y-2 max-h-64 overflow-y-auto pr-0.5 overscroll-contain">
-                            ${feed.map((n, idx) => `
-                                <div onclick="onFeedNotificationItemClick(${idx})" class="p-3 rounded-2xl border ${n.read ? 'bg-slate-50 border-slate-200' : 'bg-amber-50/70 border-amber-300 shadow-2xs'} cursor-pointer hover:border-emerald-500 transition space-y-1.5">
+                            ${feed.map((n, idx) => {
+                                const isReadHere = ElwaNotificationManager.isFeedReadOnDevice(n);
+                                return `
+                                <div onclick="onFeedNotificationItemClick(${idx})" class="p-3 rounded-2xl border ${isReadHere ? 'bg-slate-50 border-slate-200' : 'bg-amber-50/70 border-amber-300 shadow-2xs'} cursor-pointer hover:border-emerald-500 transition space-y-1.5">
                                     <div class="flex items-center justify-between gap-1">
                                         <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded ${n.type === 'school' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-elwa-dark text-amber-300'}">
                                             <i class="fa-solid ${n.type === 'school' ? 'fa-school' : 'fa-user-shield'} mr-1"></i>${n.type === 'school' ? 'Info Umum Sekolah' : 'Update Informasi Santri'}
@@ -13554,7 +13649,8 @@
                                         ${n.type === 'school' ? 'Ketuk untuk membuka bagian informasi sekolah &rarr;' : 'Demi privasi, ketuk &amp; masukkan password santri untuk melihat detail perubahannya &rarr;'}
                                     </span>
                                 </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     `}
                 </div>
@@ -13615,9 +13711,12 @@
         }
 
         function markAllFeedNotificationsRead() {
-            (AppState.notificationsFeed || []).forEach(n => { n.read = true; });
+            (AppState.notificationsFeed || []).forEach(n => {
+                ElwaNotificationManager.markFeedReadOnDevice(n.id);
+            });
             ElwaNotificationManager.syncBadgeCount();
             openNotificationCenterModal();
+            showToast("Semua pemberitahuan ditandai sudah dibaca di HP/perangkat ini", "info");
         }
 
         function requestPhoneNotificationPermission() {
