@@ -149,6 +149,10 @@
 
             <!-- Quick Action Icons -->
             <div class="flex items-center space-x-1.5">
+                <button onclick="openNotificationCenterModal()" id="headerNotifBellBtn" title="Pusat Notifikasi Informasi (Otomatis Bersih 7 Hari)" class="relative w-8 h-8 rounded-full bg-emerald-900/80 hover:bg-emerald-800 text-white flex items-center justify-center text-xs transition border border-emerald-700/60">
+                    <i class="fa-solid fa-bell text-amber-300"></i>
+                    <span id="headerBellBadge" class="min-w-[15px] h-[15px] px-1 rounded-full bg-rose-600 text-white text-[8px] font-black flex items-center justify-center absolute -top-1 -right-1 border border-elwa-dark animate-pulse">1</span>
+                </button>
                 <button onclick="openKelolaRoleModal()" id="headerEditBtn" title="Mode Kelola" class="w-8 h-8 rounded-full bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 flex items-center justify-center text-xs transition border border-emerald-700/60">
                     <i class="fa-solid fa-sliders text-elwa-amber"></i>
                 </button>
@@ -1257,11 +1261,14 @@
                             </span>
                         </div>
                         <p class="text-[10px] text-emerald-100/90 leading-snug">
-                            Memudahkan Musyrif menghafal dan mengingat santri pegangannya serta membuka data perkembangan santri secara langsung tanpa perlu mencari satu per satu.
+                            Tambahkan data Musyrif terlebih dahulu (Mode Admin), lalu tambahkan santri binaan/pegangan di bawah masing-masing Musyrif menggunakan fitur pencarian cepat.
                         </p>
-                        <div id="musyrifManageBtnWrap" class="hidden pt-1">
-                            <button type="button" onclick="openAssignMusyrifSantriModal()" class="w-full py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-elwa-dark font-black text-[10px] shadow-xs flex items-center justify-center transition">
-                                <i class="fa-solid fa-user-gear mr-1.5"></i> Atur / Kelola Santri Pegangan Musyrif
+                        <div id="musyrifManageBtnWrap" class="hidden pt-1 grid grid-cols-2 gap-1.5">
+                            <button type="button" onclick="openAddMusyrifModal()" class="py-2 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-elwa-dark font-black text-[10px] shadow-xs flex items-center justify-center transition">
+                                <i class="fa-solid fa-user-plus mr-1.5"></i> + Tambah Musyrif Baru
+                            </button>
+                            <button type="button" onclick="openAssignMusyrifSantriModal()" class="py-2 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-bold text-[10px] shadow-xs flex items-center justify-center transition">
+                                <i class="fa-solid fa-user-gear mr-1.5 text-amber-300"></i> Atur / Kelola Santri Pegangan Musyrif
                             </button>
                         </div>
                     </div>
@@ -2242,24 +2249,30 @@
             studentSearchQuery: '',
             activeStudentDirTab: 'santri', // 'santri' | 'musyrif'
             musyrifSearchQuery: '',
-            notificationsFeed: [
+            musyrifList: [
                 {
-                    id: 1730000001,
-                    type: 'school',
-                    title: 'Agenda Terdekat Sekolah',
-                    body: 'Ada agenda terdekat pada tanggal 10 Nov 2026 yaitu Daurah Bahasa Arab Bersama Masyayikh',
-                    targetSection: 'sec-berita',
-                    timeLabel: 'Baru saja',
-                    read: false
+                    id: 1001,
+                    nama: "Ust. Rahmat Hidayat, Lc.",
+                    asrama: "Asrama Ibnu Khaldun & Salman Al-Farisi",
+                    waLink: "https://wa.me/6281234567890"
                 },
                 {
+                    id: 1002,
+                    nama: "Ustadzah Fatimah, S.Pd.",
+                    asrama: "Asrama Maryam & Aisyah",
+                    waLink: "https://wa.me/6281234567892"
+                }
+            ],
+            notificationsFeed: [
+                {
                     id: 1730000002,
+                    createdAt: Date.now() - 1800000,
                     type: 'student',
                     childIdx: 0,
                     studentName: 'Muhammad Fatih Al-Ayyubi',
                     studentClass: 'XI IPA-1 (Imam Al-Bukhari)',
-                    title: 'Pemberitahuan Data Santri',
-                    body: 'Ada pemberitahuan atas nama Muhammad Fatih Al-Ayyubi kelas XI IPA-1 (Imam Al-Bukhari)',
+                    title: 'Update Informasi Santri',
+                    body: 'Ada update pemberitahuan informasi atas nama Muhammad Fatih Al-Ayyubi kelas XI IPA-1 (Imam Al-Bukhari)',
                     timeLabel: 'Baru saja',
                     read: false
                 }
@@ -4312,8 +4325,10 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Musyrif Asrama</label>
-                            <input id="inpBioMusyrif" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${child.musyrif}">
+                            <label class="block font-bold text-slate-700 mb-1">Pilih Musyrif Asrama</label>
+                            <select id="inpBioMusyrif" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white text-slate-900">
+                                ${getMusyrifSelectOptionsHtml(child.musyrif)}
+                            </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">Wali Kelas</label>
@@ -4347,7 +4362,12 @@
                 child.marhalah = document.getElementById('inpBioMarhalah').value.trim() || child.marhalah;
                 child.asrama = document.getElementById('inpBioAsrama').value.trim() || child.asrama;
                 child.peminatan = document.getElementById('inpBioPeminatan').value.trim() || child.peminatan;
-                child.musyrif = document.getElementById('inpBioMusyrif').value.trim() || child.musyrif;
+                const selectedBioMusyrif = document.getElementById('inpBioMusyrif').value.trim() || child.musyrif;
+                child.musyrif = selectedBioMusyrif;
+                const matchedMusyrifObj = (AppState.musyrifList || []).find(m => m.nama === selectedBioMusyrif);
+                if (matchedMusyrifObj && matchedMusyrifObj.waLink) {
+                    child.musyrifWaLink = matchedMusyrifObj.waLink;
+                }
                 child.waliKelas = document.getElementById('inpBioWaliKelas').value.trim() || child.waliKelas;
 
                 renderChildPortal();
@@ -4536,8 +4556,10 @@
 
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">5. Musyrif Pembina Asrama</label>
-                            <input id="inpNewStuMusyrif" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: Ust. Rahmat Hidayat, Lc.">
+                            <label class="block font-bold text-slate-700 mb-1">5. Pilih Musyrif Pembina</label>
+                            <select id="inpNewStuMusyrif" onchange="onNewStudentMusyrifSelectChange(this.value)" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white text-slate-900">
+                                ${getMusyrifSelectOptionsHtml('')}
+                            </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">6. Wali Kelas</label>
@@ -8205,43 +8227,95 @@
             renderMusyrifDirectory();
         }
 
+        // Pastikan master data Musyrif selalu tersinkron dengan data santri yang ada
+        function ensureMusyrifListSynced() {
+            if (!Array.isArray(AppState.musyrifList)) {
+                AppState.musyrifList = [];
+            }
+            const existingNames = new Set(AppState.musyrifList.map(m => (m.nama || '').trim().toLowerCase()));
+            (AppState.children || []).forEach((c, idx) => {
+                const mName = (c.musyrif || '').trim();
+                if (mName && mName !== 'Belum Ditentukan' && !existingNames.has(mName.toLowerCase())) {
+                    existingNames.add(mName.toLowerCase());
+                    const baseAsrama = c.asrama ? c.asrama.split('-')[0].trim() : 'Asrama Pesantren';
+                    AppState.musyrifList.push({
+                        id: Date.now() + idx + Math.floor(Math.random() * 1000),
+                        nama: mName,
+                        asrama: baseAsrama,
+                        waLink: c.musyrifWaLink || 'https://wa.me/6281234567890'
+                    });
+                }
+            });
+        }
+
+        function getMusyrifSelectOptionsHtml(selectedName = '') {
+            ensureMusyrifListSynced();
+            const list = AppState.musyrifList || [];
+            const cleanSel = (selectedName || '').trim();
+            let options = list.map(m => {
+                const isSelected = m.nama === cleanSel;
+                return `<option value="${m.nama.replace(/"/g, '&quot;')}" ${isSelected ? 'selected' : ''}>${m.nama} (${m.asrama || 'Asrama'})</option>`;
+            }).join('');
+
+            const hasUnassigned = (cleanSel === '' || cleanSel === 'Belum Ditentukan');
+            options += `<option value="Belum Ditentukan" ${hasUnassigned && list.length === 0 ? 'selected' : ''}>-- Belum Ditentukan --</option>`;
+            return options;
+        }
+
+        function onNewStudentMusyrifSelectChange(selectedMusyrifName) {
+            ensureMusyrifListSynced();
+            const found = (AppState.musyrifList || []).find(m => m.nama === selectedMusyrifName);
+            const waInp = document.getElementById('inpNewStuMusyrifWa');
+            if (found && found.waLink && waInp) {
+                waInp.value = found.waLink;
+            }
+        }
+
         function renderMusyrifDirectory() {
+            ensureMusyrifListSynced();
             const container = document.getElementById('musyrifCardsContainer');
             const totalBadge = document.getElementById('musyrifTotalCountBadge');
             const manageWrap = document.getElementById('musyrifManageBtnWrap');
             if (!container) return;
 
+            const isAdmin = Boolean(AppState.editMode && AppState.activeRole === 'Super Admin');
             const isStaffRole = Boolean(
                 AppState.editMode &&
                 (AppState.activeRole === 'Super Admin' || AppState.activeRole === 'Guru' || AppState.activeRole === 'Evaluator')
             );
+
             if (manageWrap) {
-                if (AppState.editMode && (AppState.activeRole === 'Super Admin' || AppState.activeRole === 'Guru')) {
+                if (isAdmin) {
                     manageWrap.classList.remove('hidden');
                 } else {
                     manageWrap.classList.add('hidden');
                 }
             }
 
-            // Kelompokkan seluruh santri berdasarkan nama Musyrif pembina asrama
-            const musyrifMap = {};
-            (AppState.children || []).forEach((child, idx) => {
-                const mName = (child.musyrif || 'Musyrif Asrama').trim();
-                if (!musyrifMap[mName]) {
-                    musyrifMap[mName] = {
-                        nama: mName,
-                        asramaList: new Set(),
-                        santriList: []
-                    };
-                }
-                if (child.asrama) {
-                    const baseAsrama = child.asrama.split('-')[0].trim();
-                    musyrifMap[mName].asramaList.add(baseAsrama);
-                }
-                musyrifMap[mName].santriList.push({ child, realIdx: idx });
+            // Bangun grup dari AppState.musyrifList sehingga Musyrif yang baru ditambahkan (meskipun 0 santri) langsung tampil
+            const allMusyrifGroups = (AppState.musyrifList || []).map(m => {
+                const santriList = [];
+                const dynamicAsramaSet = new Set();
+                if (m.asrama) dynamicAsramaSet.add(m.asrama);
+
+                (AppState.children || []).forEach((child, idx) => {
+                    if ((child.musyrif || '').trim().toLowerCase() === (m.nama || '').trim().toLowerCase()) {
+                        santriList.push({ child, realIdx: idx });
+                        if (child.asrama) {
+                            dynamicAsramaSet.add(child.asrama.split('-')[0].trim());
+                        }
+                    }
+                });
+
+                return {
+                    id: m.id,
+                    nama: m.nama,
+                    asrama: m.asrama || Array.from(dynamicAsramaSet).join(' & ') || 'Asrama Pesantren',
+                    waLink: m.waLink || 'https://wa.me/6281234567890',
+                    santriList
+                };
             });
 
-            const allMusyrifGroups = Object.values(musyrifMap);
             if (totalBadge) {
                 totalBadge.innerText = `${allMusyrifGroups.length} Musyrif • ${(AppState.children || []).length} Santri`;
             }
@@ -8250,8 +8324,12 @@
             const filteredGroups = allMusyrifGroups.filter(g => {
                 if (!q) return true;
                 const matchMusyrif = g.nama.toLowerCase().includes(q);
-                const matchAsrama = Array.from(g.asramaList).some(a => a.toLowerCase().includes(q));
-                const matchSantri = g.santriList.some(s => s.child.nama.toLowerCase().includes(q) || s.child.kelas.toLowerCase().includes(q));
+                const matchAsrama = (g.asrama || '').toLowerCase().includes(q);
+                const matchSantri = g.santriList.some(s =>
+                    s.child.nama.toLowerCase().includes(q) ||
+                    s.child.kelas.toLowerCase().includes(q) ||
+                    s.child.nis.toLowerCase().includes(q)
+                );
                 return matchMusyrif || matchAsrama || matchSantri;
             });
 
@@ -8260,7 +8338,12 @@
                     <div class="bg-white p-6 rounded-3xl border border-slate-200 text-center space-y-2">
                         <i class="fa-solid fa-user-tie text-2xl text-slate-300"></i>
                         <h4 class="font-bold text-xs text-slate-700">Data Musyrif Tidak Ditemukan</h4>
-                        <p class="text-[10px] text-slate-500">Coba kata kunci nama musyrif atau nama santri lainnya.</p>
+                        <p class="text-[10px] text-slate-500">Coba kata kunci lain atau tambahkan Musyrif baru melalui Mode Admin.</p>
+                        ${isAdmin ? `
+                            <button type="button" onclick="openAddMusyrifModal()" class="mt-2 px-3 py-2 rounded-xl bg-amber-400 text-elwa-dark font-black text-xs shadow-xs inline-flex items-center">
+                                <i class="fa-solid fa-user-plus mr-1.5"></i> + Tambah Musyrif Baru
+                            </button>
+                        ` : ''}
                     </div>
                 `;
                 return;
@@ -8268,81 +8351,573 @@
 
             container.innerHTML = filteredGroups.map((group, gIdx) => {
                 const count = group.santriList.length;
-                const shortNames = group.santriList.map(s => s.child.nama).join(', ');
-                const asramaText = Array.from(group.asramaList).join(' & ') || 'Asrama Pesantren';
 
                 return `
-                    <div class="bg-white rounded-3xl p-4 border border-slate-200/90 shadow-xs space-y-3">
-                        <!-- Header Musyrif & Jumlah Santri Pegangannya -->
-                        <div class="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100">
-                            <div class="flex items-center space-x-2.5 min-w-0">
-                                <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-elwa-dark flex items-center justify-center text-base font-black flex-shrink-0 border border-emerald-300">
-                                    <i class="fa-solid fa-user-tie"></i>
+                    <div class="bg-white rounded-3xl overflow-hidden border-2 border-emerald-800/20 shadow-md">
+                        <!-- BAGIAN ATAS: BANNER KHUSUS MUSYRIF (WARNA KHUSUS MENARIK, UKURAN HURUF LEBIH BESAR, TANPA FOTO PROFIL) -->
+                        <div class="bg-gradient-to-r from-elwa-dark via-emerald-900 to-emerald-800 text-white p-4 border-b-2 border-amber-400/80 relative">
+                            <div class="flex items-start justify-between gap-2.5">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center flex-wrap gap-1.5 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-400 text-elwa-dark font-black text-[9px] uppercase tracking-wider shadow-2xs">
+                                            MUSYRIF PEMBINA #${gIdx + 1}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-md bg-white/15 text-amber-200 font-bold text-[10px] border border-white/20">
+                                            ${count} Santri Binaan
+                                        </span>
+                                    </div>
+                                    <!-- Nama Musyrif ukuran besar & menonjol (tanpa foto profil) -->
+                                    <h4 class="text-base sm:text-lg font-black text-white leading-snug tracking-tight mt-1">
+                                        ${group.nama}
+                                    </h4>
+                                    <p class="text-xs font-semibold text-emerald-200 mt-0.5 flex items-center">
+                                        <i class="fa-solid fa-building-user mr-1.5 text-amber-300 text-[11px]"></i>
+                                        <span>${group.asrama}</span>
+                                    </p>
                                 </div>
-                                <div class="min-w-0">
-                                    <span class="text-[9px] font-extrabold uppercase text-emerald-700 tracking-wider block">${asramaText}</span>
-                                    <h4 class="text-xs font-black text-slate-900 truncate">${gIdx + 1}. ${group.nama}</h4>
-                                    <span class="inline-block mt-1 text-[10px] font-black text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-lg">
-                                        Jumlah Santri Pegangan: ${count} Santri
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Ringkasan Nama-Nama Santri Pegangan (Contoh: Ust Syarif jumlah santri pegangannya ada 3 (Zidan, Fatih, Rangga)) -->
-                        <div class="p-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 text-[10px] text-emerald-950 leading-relaxed">
-                            <strong class="text-elwa-dark">Ringkasan Pegangan (${count} Orang):</strong>
-                            <span class="font-semibold">${group.nama} memegang <strong>${count} santri</strong> (${shortNames}).</span>
-                        </div>
-
-                        <!-- Daftar Santri Pegangan (Bisa Langsung Diklik ke Data Santri di Bawah Nama Santri Tersebut) -->
-                        <div class="space-y-2">
-                            <span class="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block">
-                                Daftar Santri Pegangan ${group.nama} ${isStaffRole ? '(Klik langsung untuk membuka Data Santri)' : ''}:
-                            </span>
-                            <div class="space-y-2">
-                                ${group.santriList.map((entry, sIdx) => {
-                                    const c = entry.child;
-                                    const rIdx = entry.realIdx;
-                                    const isUnlocked = isStaffRole || (AppState.unlockedStudentIndices || []).includes(rIdx);
-                                    return `
-                                        <div onclick="selectStudent(${rIdx})" class="p-2.5 rounded-2xl border ${isStaffRole ? 'border-emerald-300 bg-slate-50/80 hover:bg-emerald-50/70' : 'border-slate-200 bg-slate-50'} transition cursor-pointer card-press space-y-2">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <div class="flex items-center space-x-2.5 min-w-0">
-                                                    <img src="${c.foto}" alt="${c.nama}" class="w-10 h-10 rounded-xl object-cover border border-emerald-300 flex-shrink-0">
-                                                    <div class="min-w-0">
-                                                        <h5 class="text-xs font-black text-slate-900 truncate">${sIdx + 1}. ${c.nama}</h5>
-                                                        <p class="text-[10px] text-emerald-700 font-bold truncate">${c.kelas} • Hafalan: ${c.hafalan}</p>
-                                                        <p class="text-[9px] text-slate-500 truncate">${c.asrama}</p>
-                                                    </div>
-                                                </div>
-                                                <span class="text-[9px] font-extrabold ${isUnlocked ? 'text-emerald-800 bg-emerald-100 border-emerald-300' : 'text-amber-800 bg-amber-100 border-amber-300'} px-2 py-1 rounded-xl border flex-shrink-0">
-                                                    <i class="fa-solid ${isUnlocked ? 'fa-folder-open' : 'fa-lock'} mr-1"></i>${isUnlocked ? 'Buka' : 'Password'}
-                                                </span>
-                                            </div>
-                                            <!-- Tombol Akses Cepat di Bawah Nama Santri (Khusus Mode Admin, Guru/Musyrif, dan Evaluator) -->
-                                            ${isStaffRole ? `
-                                                <button type="button" onclick="event.stopPropagation(); selectStudent(${rIdx});" class="w-full py-1.5 px-3 rounded-xl bg-elwa-dark hover:bg-emerald-900 text-amber-300 font-black text-[10px] shadow-2xs flex items-center justify-center transition">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square mr-1.5 text-[9px]"></i> Buka Data Santri: ${c.nama}
-                                                </button>
-                                            ` : ''}
+                                ${isAdmin ? `
+                                    <div class="flex flex-col space-y-1.5 flex-shrink-0">
+                                        <div class="flex items-center space-x-1">
+                                            <button type="button" onclick="openEditMusyrifModal(${group.id})" class="px-2.5 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-elwa-dark font-black text-[10px] shadow-xs flex items-center transition" title="Edit Data Musyrif">
+                                                <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                            </button>
+                                            <button type="button" onclick="openDeleteMusyrifModal(${group.id})" class="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] shadow-xs flex items-center transition" title="Hapus Musyrif">
+                                                <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                            </button>
                                         </div>
-                                    `;
-                                }).join('')}
+                                        <button type="button" onclick="openAddBinaanToMusyrifModal(${group.id})" class="px-2.5 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-amber-300 border border-amber-300/40 font-extrabold text-[10px] flex items-center justify-center transition">
+                                            <i class="fa-solid fa-user-plus mr-1 text-[8px]"></i> + Santri Binaan
+                                        </button>
+                                    </div>
+                                ` : ''}
                             </div>
+                        </div>
+
+                        <!-- BAGIAN BAWAH: DAFTAR SANTRI BINAAN (UKURAN FONT LEBIH KECIL & RAPI DI BAWAH MUSYRIF) -->
+                        <div class="p-3.5 bg-slate-50/70 space-y-2.5">
+                            <div class="flex items-center justify-between gap-2 px-0.5">
+                                <span class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
+                                    Daftar Santri Binaan (${count} Santri):
+                                </span>
+                                ${isAdmin ? `
+                                    <button type="button" onclick="openAddBinaanToMusyrifModal(${group.id})" class="text-[10px] font-extrabold text-emerald-700 hover:underline flex items-center">
+                                        <i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Cari &amp; Tambah Santri
+                                    </button>
+                                ` : ''}
+                            </div>
+
+                            ${count === 0 ? `
+                                <div class="p-3.5 rounded-2xl border border-dashed border-slate-300 bg-white text-center space-y-1.5">
+                                    <p class="text-[11px] text-slate-500 italic">Belum ada santri binaan yang ditambahkan ke ${group.nama}.</p>
+                                    ${isAdmin ? `
+                                        <button type="button" onclick="openAddBinaanToMusyrifModal(${group.id})" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-elwa-dark font-black text-[10px] shadow-2xs inline-flex items-center">
+                                            <i class="fa-solid fa-user-plus mr-1.5"></i> + Cari &amp; Tambahkan Santri Binaan
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            ` : `
+                                <div class="space-y-1.5 pl-2 border-l-2 border-emerald-600/40">
+                                    ${group.santriList.map((entry, sIdx) => {
+                                        const c = entry.child;
+                                        const rIdx = entry.realIdx;
+                                        const isUnlocked = isStaffRole || (AppState.unlockedStudentIndices || []).includes(rIdx);
+                                        return `
+                                            <div onclick="selectStudent(${rIdx})" class="p-2.5 rounded-2xl border ${isStaffRole ? 'border-slate-200/90 bg-white hover:border-emerald-400' : 'border-slate-200 bg-white'} transition cursor-pointer card-press space-y-1.5 shadow-2xs">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="flex items-center space-x-2 min-w-0">
+                                                        <span class="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-900 font-black text-[10px] flex items-center justify-center flex-shrink-0 border border-emerald-200">
+                                                            ${sIdx + 1}
+                                                        </span>
+                                                        <div class="min-w-0">
+                                                            <h5 class="text-[11px] font-bold text-slate-800 truncate">${c.nama}</h5>
+                                                            <p class="text-[9px] text-emerald-700 font-semibold truncate">${c.kelas} • Hafalan: ${c.hafalan} • ${c.asrama}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-[8px] font-extrabold ${isUnlocked ? 'text-emerald-800 bg-emerald-50 border-emerald-200' : 'text-amber-800 bg-amber-50 border-amber-200'} px-2 py-0.5 rounded-lg border flex-shrink-0">
+                                                        <i class="fa-solid ${isUnlocked ? 'fa-folder-open' : 'fa-lock'} mr-1"></i>${isUnlocked ? 'Buka' : 'Password'}
+                                                    </span>
+                                                </div>
+
+                                                <!-- Baris Aksi Santri Binaan: Buka Data + Edit & Hapus Santri Binaan (Mode Admin) -->
+                                                ${isStaffRole ? `
+                                                    <div class="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                                                        <button type="button" onclick="event.stopPropagation(); selectStudent(${rIdx});" class="flex-1 py-1 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold text-[9px] flex items-center justify-center transition">
+                                                            <i class="fa-solid fa-arrow-up-right-from-square mr-1 text-[8px]"></i> Buka Data Santri
+                                                        </button>
+                                                        ${isAdmin ? `
+                                                            <button type="button" onclick="event.stopPropagation(); openEditBinaanSantriModal(${rIdx}, ${group.id});" class="py-1 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[9px] flex items-center justify-center transition" title="Edit / Pindahkan Santri Binaan">
+                                                                <i class="fa-solid fa-pen mr-1 text-[8px]"></i> Edit
+                                                            </button>
+                                                            <button type="button" onclick="event.stopPropagation(); removeBinaanFromMusyrif(${rIdx}, ${group.id});" class="py-1 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[9px] flex items-center justify-center transition" title="Hapus dari Binaan Musyrif Ini">
+                                                                <i class="fa-solid fa-user-minus mr-1 text-[8px]"></i> Hapus
+                                                            </button>
+                                                        ` : ''}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            `}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // MODAL ATUR / KELOLA SANTRI PEGANGAN MUSYRIF (MODE ADMIN & GURU/MUSYRIF)
+        // 1. MODAL TAMBAH MUSYRIF BARU (KHUSUS MODE ADMIN)
+        function openAddMusyrifModal() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menambahkan data Musyrif baru!", "error");
+                return;
+            }
+            ensureMusyrifListSynced();
+            setModalTitle("Tambah Data Musyrif Baru (Admin)", "fa-user-tie");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Simpan Musyrif Baru';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div class="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-900 leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
+                        Tambahkan data <strong>Musyrif / Musyrifah</strong> terlebih dahulu. Setelah ditambahkan, Anda dapat langsung memilih santri pegangannya dan namanya otomatis muncul di pilihan Musyrif saat input/edit data santri.
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Musyrif / Musyrifah <span class="text-rose-600">*</span></label>
+                        <input id="inpAddMusyrifNama" type="text" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900" placeholder="Contoh: Ust. Syarif Hidayatullah, Lc.">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Asrama Pembinaan</label>
+                        <input id="inpAddMusyrifAsrama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" placeholder="Contoh: Asrama Ibnu Katsir - Lantai 2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nomor / Link WhatsApp Musyrif</label>
+                        <input id="inpAddMusyrifWa" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-mono" value="081234567890" placeholder="Contoh: 081234567890">
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const nama = document.getElementById('inpAddMusyrifNama').value.trim();
+                const asrama = document.getElementById('inpAddMusyrifAsrama').value.trim() || 'Asrama Pesantren';
+                let rawWa = document.getElementById('inpAddMusyrifWa').value.trim() || 'https://wa.me/6281234567890';
+
+                if (!nama) {
+                    showToast("Nama lengkap Musyrif wajib diisi!", "error");
+                    return;
+                }
+                if ((AppState.musyrifList || []).some(m => m.nama.trim().toLowerCase() === nama.toLowerCase())) {
+                    showToast("Nama Musyrif tersebut sudah terdaftar!", "error");
+                    return;
+                }
+                if (!rawWa.startsWith('http://') && !rawWa.startsWith('https://')) {
+                    let digits = rawWa.replace(/[^0-9]/g, '');
+                    if (digits.startsWith('0')) digits = '62' + digits.substring(1);
+                    rawWa = `https://wa.me/${digits || '6281234567890'}`;
+                }
+
+                const newMusyrif = {
+                    id: Date.now(),
+                    nama,
+                    asrama,
+                    waLink: rawWa
+                };
+                AppState.musyrifList.push(newMusyrif);
+                renderMusyrifDirectory();
+                closeModal();
+                showToast(`Musyrif "${nama}" berhasil ditambahkan! Silakan tambahkan santri binaannya.`, "success");
+            };
+            openModal();
+        }
+
+        // 2. MODAL EDIT DATA MUSYRIF (KHUSUS MODE ADMIN - OTOMATIS UPDATE KE SELURUH SANTRI BINAANNYA)
+        function openEditMusyrifModal(musyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat mengedit data Musyrif!", "error");
+                return;
+            }
+            ensureMusyrifListSynced();
+            const item = (AppState.musyrifList || []).find(m => Number(m.id) === Number(musyrifId));
+            if (!item) return;
+
+            setModalTitle("Edit Data Musyrif (Admin)", "fa-user-pen");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Simpan Perubahan Musyrif';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Musyrif / Musyrifah</label>
+                        <input id="inpEditMasterMusyrifNama" type="text" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900" value="${item.nama}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Asrama Pembinaan</label>
+                        <input id="inpEditMasterMusyrifAsrama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${item.asrama || ''}">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nomor / Link WhatsApp Musyrif</label>
+                        <input id="inpEditMasterMusyrifWa" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-mono" value="${item.waLink || ''}">
+                    </div>
+                    <p class="text-[10px] text-slate-500">
+                        <i class="fa-solid fa-rotate mr-1 text-emerald-600"></i>Perubahan nama &amp; WA Musyrif otomatis diperbarui pada seluruh santri binaannya.
+                    </p>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const oldName = item.nama;
+                const newNama = document.getElementById('inpEditMasterMusyrifNama').value.trim();
+                const newAsrama = document.getElementById('inpEditMasterMusyrifAsrama').value.trim() || 'Asrama Pesantren';
+                let rawWa = document.getElementById('inpEditMasterMusyrifWa').value.trim() || item.waLink;
+
+                if (!newNama) {
+                    showToast("Nama Musyrif tidak boleh kosong!", "error");
+                    return;
+                }
+                if (!rawWa.startsWith('http://') && !rawWa.startsWith('https://')) {
+                    let digits = rawWa.replace(/[^0-9]/g, '');
+                    if (digits.startsWith('0')) digits = '62' + digits.substring(1);
+                    rawWa = `https://wa.me/${digits || '6281234567890'}`;
+                }
+
+                item.nama = newNama;
+                item.asrama = newAsrama;
+                item.waLink = rawWa;
+
+                // Update otomatis seluruh santri yang dibina oleh musyrif ini
+                (AppState.children || []).forEach(c => {
+                    if ((c.musyrif || '').trim().toLowerCase() === (oldName || '').trim().toLowerCase()) {
+                        c.musyrif = newNama;
+                        c.musyrifWaLink = rawWa;
+                    }
+                });
+
+                renderStudentList();
+                renderChildPortal();
+                closeModal();
+                showToast(`Data Musyrif "${newNama}" berhasil diperbarui!`, "success");
+            };
+            openModal();
+        }
+
+        // 3. MODAL HAPUS DATA MUSYRIF (KHUSUS MODE ADMIN)
+        function openDeleteMusyrifModal(musyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menghapus data Musyrif!", "error");
+                return;
+            }
+            ensureMusyrifListSynced();
+            const item = (AppState.musyrifList || []).find(m => Number(m.id) === Number(musyrifId));
+            if (!item) return;
+
+            const binaanStudents = (AppState.children || []).filter(c => (c.musyrif || '').trim().toLowerCase() === item.nama.trim().toLowerCase());
+            const otherMusyrifs = (AppState.musyrifList || []).filter(m => Number(m.id) !== Number(musyrifId));
+
+            setModalTitle("Hapus Data Musyrif", "fa-user-xmark");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Ya, Hapus Musyrif';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div class="p-3 rounded-2xl bg-rose-50 border border-rose-200 space-y-1">
+                        <span class="text-[9px] font-black uppercase text-rose-800 bg-rose-200/80 px-2 py-0.5 rounded">Konfirmasi Hapus Musyrif</span>
+                        <h4 class="text-xs font-black text-slate-900 mt-1">${item.nama}</h4>
+                        <p class="text-[10px] text-slate-600">${item.asrama} • Memiliki <strong>${binaanStudents.length} Santri Binaan</strong></p>
+                    </div>
+
+                    ${binaanStudents.length > 0 ? `
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Alihkan ${binaanStudents.length} Santri Binaannya ke Musyrif:</label>
+                            <select id="inpReassignDeletedMusyrif" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white text-slate-900">
+                                <option value="Belum Ditentukan">-- Kosongkan / Belum Ditentukan --</option>
+                                ${otherMusyrifs.map(om => `<option value="${om.nama.replace(/"/g, '&quot;')}">${om.nama} (${om.asrama})</option>`).join('')}
+                            </select>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const targetReplacement = document.getElementById('inpReassignDeletedMusyrif')?.value || 'Belum Ditentukan';
+                const repObj = (AppState.musyrifList || []).find(m => m.nama === targetReplacement);
+
+                (AppState.children || []).forEach(c => {
+                    if ((c.musyrif || '').trim().toLowerCase() === item.nama.trim().toLowerCase()) {
+                        c.musyrif = targetReplacement;
+                        if (repObj && repObj.waLink) c.musyrifWaLink = repObj.waLink;
+                    }
+                });
+
+                AppState.musyrifList = (AppState.musyrifList || []).filter(m => Number(m.id) !== Number(musyrifId));
+                renderStudentList();
+                renderChildPortal();
+                closeModal();
+                showToast(`Musyrif "${item.nama}" berhasil dihapus!`, "info");
+            };
+            openModal();
+        }
+
+        // 4. MODAL TAMBAH SANTRI BINAAN KE MUSYRIF DENGAN FITUR PENCARIAN LANGSUNG (KHUSUS MODE ADMIN)
+        let currentAddBinaanMusyrifId = null;
+        let currentBinaanSearchKeyword = '';
+
+        function openAddBinaanToMusyrifModal(musyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menambahkan santri binaan!", "error");
+                return;
+            }
+            ensureMusyrifListSynced();
+            const musyrifObj = (AppState.musyrifList || []).find(m => Number(m.id) === Number(musyrifId));
+            if (!musyrifObj) return;
+
+            currentAddBinaanMusyrifId = musyrifId;
+            currentBinaanSearchKeyword = '';
+
+            setModalTitle(`Tambah Santri Binaan`, "fa-user-plus");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) saveBtn.style.display = 'none';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <span class="text-[9px] font-black uppercase text-emerald-800 block">Musyrif Pembina Tujuan</span>
+                            <h4 class="text-xs font-black text-slate-900 mt-0.5">${musyrifObj.nama}</h4>
+                            <span class="text-[10px] text-slate-600 block">${musyrifObj.asrama}</span>
+                        </div>
+                        <span id="badgeModalBinaanCount" class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-elwa-dark">
+                            0 Santri
+                        </span>
+                    </div>
+
+                    <!-- Kolom Pencarian Cepat Santri (Ketik Nama Langsung Muncul Nama & Data Singkatnya) -->
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1 text-xs">Cari Nama Santri yang Akan Ditambahkan:</label>
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-magnifying-glass text-emerald-600 absolute left-3.5 text-xs pointer-events-none"></i>
+                            <input id="inpSearchCandidateBinaan" oninput="onSearchCandidateBinaanInput(this.value)" type="text" placeholder="Ketik nama santri, NIS, kelas, atau asrama..." class="w-full pl-9 pr-8 py-2.5 rounded-2xl bg-white border-2 border-emerald-500 text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none">
+                        </div>
+                        <span class="text-[9px] text-slate-500 block mt-1">
+                            <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Ketik nama santri untuk memunculkan data singkatnya, lalu ketuk tombol <strong>+ Tambahkan</strong>.
+                        </span>
+                    </div>
+
+                    <!-- Hasil Pencarian & Daftar Santri -->
+                    <div id="candidateBinaanSearchResults" class="space-y-2 max-h-64 overflow-y-auto pr-0.5 overscroll-contain">
+                        <!-- Rendered by renderCandidateBinaanSearchResults() -->
+                    </div>
+
+                    <button type="button" onclick="closeModal()" class="w-full py-2.5 rounded-xl bg-elwa-dark text-amber-300 font-black text-xs shadow-sm">
+                        Selesai &amp; Tutup
+                    </button>
+                </div>
+            `;
+
+            renderCandidateBinaanSearchResults();
+            openModal();
+            setTimeout(() => {
+                const inp = document.getElementById('inpSearchCandidateBinaan');
+                if (inp) inp.focus();
+            }, 120);
+        }
+
+        function onSearchCandidateBinaanInput(val) {
+            currentBinaanSearchKeyword = val || '';
+            renderCandidateBinaanSearchResults();
+        }
+
+        function renderCandidateBinaanSearchResults() {
+            const listEl = document.getElementById('candidateBinaanSearchResults');
+            const badgeEl = document.getElementById('badgeModalBinaanCount');
+            if (!listEl) return;
+
+            const musyrifObj = (AppState.musyrifList || []).find(m => Number(m.id) === Number(currentAddBinaanMusyrifId));
+            if (!musyrifObj) return;
+
+            const currentBinaanCount = (AppState.children || []).filter(
+                c => (c.musyrif || '').trim().toLowerCase() === musyrifObj.nama.trim().toLowerCase()
+            ).length;
+            if (badgeEl) badgeEl.innerText = `${currentBinaanCount} Binaan`;
+
+            const q = (currentBinaanSearchKeyword || '').trim().toLowerCase();
+            const matchedStudents = (AppState.children || []).map((c, idx) => ({ child: c, idx })).filter(item => {
+                if (!q) return true;
+                const c = item.child;
+                return (
+                    c.nama.toLowerCase().includes(q) ||
+                    c.nis.toLowerCase().includes(q) ||
+                    c.kelas.toLowerCase().includes(q) ||
+                    c.asrama.toLowerCase().includes(q)
+                );
+            });
+
+            if (matchedStudents.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-[11px] text-slate-400 italic">
+                        Tidak ditemukan santri dengan kata kunci "${currentBinaanSearchKeyword}".
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = matchedStudents.map(item => {
+                const c = item.child;
+                const isAlreadyAssignedHere = (c.musyrif || '').trim().toLowerCase() === musyrifObj.nama.trim().toLowerCase();
+
+                return `
+                    <div class="p-2.5 rounded-2xl border ${isAlreadyAssignedHere ? 'border-emerald-400 bg-emerald-50/60' : 'border-slate-200 bg-slate-50 hover:bg-white'} flex items-center justify-between gap-2 transition">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <img src="${c.foto}" class="w-10 h-10 rounded-xl object-cover border border-emerald-300 flex-shrink-0">
+                            <div class="min-w-0">
+                                <h5 class="text-xs font-black text-slate-900 truncate">${c.nama}</h5>
+                                <p class="text-[10px] text-emerald-700 font-bold truncate">NIS: ${c.nis} • ${c.kelas}</p>
+                                <p class="text-[9px] text-slate-500 truncate">${c.asrama} • Musyrif: <strong>${c.musyrif || 'Belum Ada'}</strong></p>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            ${isAlreadyAssignedHere ? `
+                                <button type="button" onclick="unassignStudentInSearchModal(${item.idx})" class="px-2.5 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 font-black text-[9px] flex items-center">
+                                    <i class="fa-solid fa-user-minus mr-1"></i> Lepas
+                                </button>
+                            ` : `
+                                <button type="button" onclick="assignStudentToMusyrif(${item.idx}, ${musyrifObj.id})" class="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-elwa-dark font-black text-[10px] shadow-2xs flex items-center">
+                                    <i class="fa-solid fa-plus mr-1"></i> Tambahkan
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function assignStudentToMusyrif(studentIdx, musyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const musyrifObj = (AppState.musyrifList || []).find(m => Number(m.id) === Number(musyrifId));
+            const child = AppState.children[studentIdx];
+            if (!musyrifObj || !child) return;
+
+            child.musyrif = musyrifObj.nama;
+            if (musyrifObj.waLink) child.musyrifWaLink = musyrifObj.waLink;
+
+            renderCandidateBinaanSearchResults();
+            renderStudentList();
+            renderChildPortal();
+            showToast(`${child.nama} berhasil ditambahkan sebagai santri binaan ${musyrifObj.nama}!`, "success");
+        }
+
+        function unassignStudentInSearchModal(studentIdx) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') return;
+            const child = AppState.children[studentIdx];
+            if (!child) return;
+            child.musyrif = "Belum Ditentukan";
+            renderCandidateBinaanSearchResults();
+            renderStudentList();
+            renderChildPortal();
+            showToast(`${child.nama} dilepaskan dari daftar binaan.`, "info");
+        }
+
+        // 5. MODAL EDIT & HAPUS SANTRI BINAAN DI BAWAH MUSYRIF (KHUSUS MODE ADMIN)
+        function openEditBinaanSantriModal(studentIdx, currentMusyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat mengedit santri binaan!", "error");
+                return;
+            }
+            ensureMusyrifListSynced();
+            const child = AppState.children[studentIdx];
+            if (!child) return;
+
+            setModalTitle("Edit Data & Musyrif Santri Binaan", "fa-user-gear");
+            const saveBtn = document.getElementById('modalSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'block';
+                saveBtn.innerText = 'Simpan Perubahan Binaan';
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center space-x-3">
+                        <img src="${child.foto}" class="w-11 h-11 rounded-xl object-cover border border-emerald-300 flex-shrink-0">
+                        <div class="min-w-0">
+                            <span class="text-[9px] font-black uppercase text-emerald-800 block">Edit Santri Binaan</span>
+                            <h4 class="text-xs font-black text-slate-900 truncate">${child.nama}</h4>
+                            <span class="text-[10px] text-slate-500 block">NIS: ${child.nis}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Musyrif Pembina Pegangan</label>
+                        <select id="inpEditBinaanMusyrifSelect" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white">
+                            ${getMusyrifSelectOptionsHtml(child.musyrif)}
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Kelas KBM</label>
+                            <input id="inpEditBinaanKelas" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${child.kelas}">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Asrama &amp; Kamar</label>
+                            <input id="inpEditBinaanAsrama" type="text" class="w-full p-2 rounded-xl border border-slate-300 text-xs" value="${child.asrama}">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            AppState.currentModalHandler = () => {
+                const newMusyrif = document.getElementById('inpEditBinaanMusyrifSelect').value.trim() || child.musyrif;
+                const newKelas = document.getElementById('inpEditBinaanKelas').value.trim() || child.kelas;
+                const newAsrama = document.getElementById('inpEditBinaanAsrama').value.trim() || child.asrama;
+
+                child.musyrif = newMusyrif;
+                child.kelas = newKelas;
+                child.asrama = newAsrama;
+
+                const matchedM = (AppState.musyrifList || []).find(m => m.nama === newMusyrif);
+                if (matchedM && matchedM.waLink) {
+                    child.musyrifWaLink = matchedM.waLink;
+                }
+
+                renderStudentList();
+                renderChildPortal();
+                closeModal();
+                showToast(`Data binaan ${child.nama} berhasil diperbarui!`, "success");
+            };
+            openModal();
+        }
+
+        function removeBinaanFromMusyrif(studentIdx, musyrifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menghapus santri dari daftar binaan!", "error");
+                return;
+            }
+            const child = AppState.children[studentIdx];
+            if (!child) return;
+            const prevMusyrif = child.musyrif;
+            child.musyrif = "Belum Ditentukan";
+            renderStudentList();
+            renderChildPortal();
+            showToast(`${child.nama} dihapus dari binaan ${prevMusyrif}`, "info");
+        }
+
+        // MODAL ATUR MASSAL SANTRI PEGANGAN MUSYRIF (MENGGUNAKAN PILIHAN DROPDOWN MUSYRIF)
         function openAssignMusyrifSantriModal() {
             if (!AppState.editMode || (AppState.activeRole !== 'Super Admin' && AppState.activeRole !== 'Guru')) {
                 showToast("Hanya Mode Admin dan Guru/Musyrif yang dapat mengatur santri pegangan!", "error");
                 return;
             }
-            setModalTitle("Atur Musyrif & Santri Pegangan", "fa-user-tie");
+            ensureMusyrifListSynced();
+            setModalTitle("Atur Massal Santri Binaan Musyrif", "fa-user-tie");
             const saveBtn = document.getElementById('modalSaveBtn');
             if (saveBtn) {
                 saveBtn.style.display = 'block';
@@ -8351,15 +8926,17 @@
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-2.5">
-                    <p class="text-[11px] text-slate-600">Atur nama Musyrif pembina asrama untuk masing-masing santri agar otomatis terkelompokkan di halaman <strong>Musyrif &amp; Santri Pegangan</strong>:</p>
+                    <p class="text-[11px] text-slate-600">Pilih nama Musyrif pembina asrama dari daftar Musyrif yang telah ditambahkan Admin:</p>
                     ${(AppState.children || []).map((c, idx) => `
                         <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-black text-slate-900">${idx + 1}. ${c.nama}</span>
                                 <span class="text-[9px] font-bold text-emerald-700">${c.kelas}</span>
                             </div>
-                            <label class="block text-[9px] font-bold text-slate-500">Nama Musyrif Pegangan:</label>
-                            <input id="inpAssignMusyrif_${idx}" type="text" class="w-full p-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 bg-white" value="${c.musyrif}">
+                            <label class="block text-[9px] font-bold text-slate-500">Pilih Musyrif Pegangan:</label>
+                            <select id="inpAssignMusyrif_${idx}" class="w-full p-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 bg-white">
+                                ${getMusyrifSelectOptionsHtml(c.musyrif)}
+                            </select>
                         </div>
                     `).join('')}
                 </div>
@@ -8370,6 +8947,8 @@
                     const inp = document.getElementById(`inpAssignMusyrif_${idx}`);
                     if (inp && inp.value.trim()) {
                         c.musyrif = inp.value.trim();
+                        const matchedM = (AppState.musyrifList || []).find(m => m.nama === c.musyrif);
+                        if (matchedM && matchedM.waLink) c.musyrifWaLink = matchedM.waLink;
                     }
                 });
                 renderStudentList();
@@ -11159,8 +11738,10 @@
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Nama Musyrif Pembina Asrama</label>
-                        <input id="inpEditMusyrifName" type="text" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800" value="${child.musyrif}" placeholder="Contoh: Ust. Rahmat Hidayat, Lc.">
+                        <label class="block font-bold text-slate-700 mb-1">Pilih Musyrif Pembina Asrama</label>
+                        <select id="inpEditMusyrifName" onchange="const foundM=(AppState.musyrifList||[]).find(m=>m.nama===this.value); if(foundM && foundM.waLink){document.getElementById('inpEditMusyrifWa').value=foundM.waLink;}" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white">
+                            ${getMusyrifSelectOptionsHtml(child.musyrif)}
+                        </select>
                     </div>
 
                     <div>
@@ -11717,7 +12298,7 @@
             studentTable: "elwa_students",
             schoolProfileTable: "elwa_school_profile",
             recordId: "elwa_conect_main_v1",
-            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V3"
+            localCacheKey: "ELWA_CONECT_SUPABASE_CACHE_V4"
         };
 
         // Kompresi otomatis untuk semua unggahan foto (Logo, Banner, Pengurus, Berita, Foto Santri)
@@ -11800,6 +12381,7 @@
                 "selectedSemesterId",
                 "selectedDownloadMonth",
                 "currentActiveCatatanYm",
+                "musyrifList",
                 "children",
                 "notificationsFeed"
             ],
@@ -12307,6 +12889,11 @@
                 "deleteRiwayatUangJajan",
                 "addModalCicilanItem",
                 "deleteModalCicilanItem",
+                "assignStudentToMusyrif",
+                "unassignStudentInSearchModal",
+                "removeBinaanFromMusyrif",
+                "deleteSingleFeedNotification",
+                "clearAllFeedNotificationsAdmin",
                 "submitParentReply",
                 "submitMusyrifNoteToParent",
                 "markNotificationRead",
@@ -12364,24 +12951,37 @@
 
         const ElwaNotificationManager = {
             lastSeenNotifId: 1730000002,
+            RETENTION_MS: 7 * 24 * 60 * 60 * 1000, // 7 Hari otomatis bersih
 
             init() {
+                this.pruneExpiredNotifications();
                 this.syncBadgeCount();
                 const feed = AppState.notificationsFeed || [];
                 if (feed.length > 0 && feed[0].id > this.lastSeenNotifId) {
                     this.lastSeenNotifId = feed[0].id;
                 }
+                // Jalankan pembersihan otomatis setiap 60 detik agar riwayat yang sudah lewat 7 hari bersih otomatis
+                setInterval(() => {
+                    this.pruneExpiredNotifications();
+                }, 60000);
 
-                // Minta izin notifikasi HP secara otomatis pada interaksi pertama jika didukung browser/HP
+                // Otomatis aktifkan izin notifikasi HP saat aplikasi dimuat & saat sentuhan/klik pertama
+                if ("Notification" in window && Notification.permission === "default") {
+                    try {
+                        Notification.requestPermission().catch(() => {});
+                    } catch (e) {}
+                }
                 const requestOnceOnGesture = () => {
                     if ("Notification" in window && Notification.permission === "default") {
                         try {
-                            Notification.requestPermission();
+                            Notification.requestPermission().catch(() => {});
                         } catch (e) {}
                     }
                     document.removeEventListener("click", requestOnceOnGesture);
+                    document.removeEventListener("touchstart", requestOnceOnGesture);
                 };
-                document.addEventListener("click", requestOnceOnGesture);
+                document.addEventListener("click", requestOnceOnGesture, { passive: true });
+                document.addEventListener("touchstart", requestOnceOnGesture, { passive: true });
             },
 
             getFormattedTime() {
@@ -12392,7 +12992,64 @@
                 }
             },
 
+            // Otomatis bersihkan riwayat pemberitahuan yang sudah lewat dari 7 hari (tanpa perlu hapus manual)
+            pruneExpiredNotifications() {
+                const now = Date.now();
+                const sevenDaysMs = this.RETENTION_MS || (7 * 24 * 60 * 60 * 1000);
+                let changed = false;
+
+                if (!Array.isArray(AppState.notificationsFeed)) {
+                    AppState.notificationsFeed = [];
+                }
+
+                const beforeLen = AppState.notificationsFeed.length;
+                AppState.notificationsFeed = AppState.notificationsFeed.filter(n => {
+                    if (!n) return false;
+                    // Jika item bawaan lama belum punya createdAt, beri waktu saat ini agar mulai dihitung 7 hari
+                    if (!n.createdAt || typeof n.createdAt !== 'number') {
+                        n.createdAt = now;
+                    }
+                    return (now - n.createdAt) < sevenDaysMs;
+                });
+                if (AppState.notificationsFeed.length !== beforeLen) {
+                    changed = true;
+                }
+
+                // Bersihkan juga pendingUpdates per santri yang sudah lewat dari 7 hari
+                (AppState.children || []).forEach(child => {
+                    if (Array.isArray(child.pendingUpdates)) {
+                        const prevLen = child.pendingUpdates.length;
+                        child.pendingUpdates = child.pendingUpdates.filter(u => {
+                            if (!u) return false;
+                            if (!u.createdAt || typeof u.createdAt !== 'number') {
+                                u.createdAt = now;
+                            }
+                            return (now - u.createdAt) < sevenDaysMs;
+                        });
+                        if (child.pendingUpdates.length !== prevLen) {
+                            changed = true;
+                        }
+                    }
+                });
+
+                if (changed && typeof ElwaSupabaseDB !== 'undefined' && ElwaSupabaseDB.isReady) {
+                    ElwaSupabaseDB.saveLocalBackup(ElwaSupabaseDB.getSnapshot());
+                }
+                return changed;
+            },
+
+            getRemainingDaysLabel(createdAt) {
+                const now = Date.now();
+                const ts = typeof createdAt === 'number' ? createdAt : now;
+                const elapsedMs = Math.max(0, now - ts);
+                const remainingMs = Math.max(0, this.RETENTION_MS - elapsedMs);
+                const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+                if (remainingDays <= 1) return "Otomatis bersih < 1 hari";
+                return `Otomatis bersih dlm ${remainingDays} hari`;
+            },
+
             syncBadgeCount() {
+                this.pruneExpiredNotifications();
                 let unreadStudentUpdates = 0;
                 (AppState.children || []).forEach(c => {
                     unreadStudentUpdates += (c.pendingUpdates || []).filter(u => !u.dibaca).length;
@@ -12403,6 +13060,18 @@
                         dot.classList.remove('hidden');
                     } else {
                         dot.classList.add('hidden');
+                    }
+                }
+
+                // Sinkronkan juga badge pada ikon lonceng di bar atas
+                const unreadFeedCount = (AppState.notificationsFeed || []).filter(n => !n.read).length;
+                const bellBadge = document.getElementById('headerBellBadge');
+                if (bellBadge) {
+                    if (unreadFeedCount > 0) {
+                        bellBadge.innerText = unreadFeedCount > 99 ? '99+' : String(unreadFeedCount);
+                        bellBadge.classList.remove('hidden');
+                    } else {
+                        bellBadge.classList.add('hidden');
                     }
                 }
             },
@@ -12525,10 +13194,13 @@
                 }, 6500);
             },
 
-            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Tampil Sesuai Pembaruan Sekolah)
+            // 1. Trigger Notifikasi Pembaruan Informasi Sekolah (Dijelaskan Mengenai Perubahan Informasinya)
             notifySchoolUpdate(title, bodyText, targetSection = 'sec-profil') {
+                this.pruneExpiredNotifications();
+                const nowTs = Date.now();
                 const notifObj = {
-                    id: Date.now(),
+                    id: nowTs,
+                    createdAt: nowTs,
                     type: 'school',
                     title: title || 'Pembaruan Informasi Sekolah',
                     body: bodyText,
@@ -12539,7 +13211,7 @@
 
                 if (!Array.isArray(AppState.notificationsFeed)) AppState.notificationsFeed = [];
                 AppState.notificationsFeed.unshift(notifObj);
-                if (AppState.notificationsFeed.length > 40) AppState.notificationsFeed.pop();
+                if (AppState.notificationsFeed.length > 50) AppState.notificationsFeed.pop();
 
                 this.lastSeenNotifId = notifObj.id;
                 this.syncBadgeCount();
@@ -12551,19 +13223,22 @@
                 }
             },
 
-            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga di Bar Atas HP, Detail Muncul Setelah Password)
+            // 2. Trigger Notifikasi Pembaruan Data Santri (Privasi Terjaga: Tidak Menyebutkan Detail Perubahannya di Notifikasi Umum)
             notifyStudentUpdate(childIdx, kategori, rincianDetail, tabTarget = 'capaian') {
+                this.pruneExpiredNotifications();
                 const idx = typeof childIdx === 'number' ? childIdx : AppState.activeChildIdx;
                 const child = AppState.children[idx];
                 if (!child) return;
 
                 const roleSender = getRoleDisplayName(AppState.activeRole) || 'Pengelola Sekolah';
                 const timeStr = this.getFormattedTime();
+                const nowTs = Date.now();
 
                 // Simpan rincian spesifik secara privat di dalam objek santri (hanya terlihat setelah verifikasi password)
                 if (!Array.isArray(child.pendingUpdates)) child.pendingUpdates = [];
                 child.pendingUpdates.unshift({
-                    id: Date.now() + Math.floor(Math.random() * 100),
+                    id: nowTs + Math.floor(Math.random() * 100),
+                    createdAt: nowTs,
                     kategori: kategori || 'Pembaruan Data Santri',
                     tabTarget: tabTarget || 'capaian',
                     rincian: rincianDetail,
@@ -12573,15 +13248,16 @@
                 });
                 if (child.pendingUpdates.length > 25) child.pendingUpdates.pop();
 
-                // Pesan Notifikasi di Bar Atas HP (Tanpa menyebutkan bagian yang diperbarui demi privasi)
-                const privacyBody = `Ada pemberitahuan atas nama ${child.nama} kelas ${child.kelas}`;
+                // Pesan Notifikasi Privasi Santri (Tanpa menyebutkan detail perubahan demi menjaga privasi)
+                const privacyBody = `Ada update pemberitahuan informasi atas nama ${child.nama} kelas ${child.kelas}`;
                 const notifObj = {
-                    id: Date.now(),
+                    id: nowTs,
+                    createdAt: nowTs,
                     type: 'student',
                     childIdx: idx,
                     studentName: child.nama,
                     studentClass: child.kelas,
-                    title: 'Pemberitahuan Data Santri',
+                    title: 'Update Informasi Santri',
                     body: privacyBody,
                     timeLabel: timeStr,
                     read: false
@@ -12804,77 +13480,78 @@
             showToast("Seluruh pemberitahuan ditandai sudah dibaca", "info");
         }
 
-        // MODAL PUSAT NOTIFIKASI HP & PENGATURAN IZIN NOTIFIKASI BAR ATAS HP
+        // MODAL PUSAT NOTIFIKASI INFORMASI (IKON LONCENG DI ATAS - OTOMATIS BERSIH SETELAH 7 HARI + HAPUS MANUAL KHUSUS ADMIN)
         function openNotificationCenterModal() {
-            setModalTitle("Pusat Notifikasi HP", "fa-bell");
+            // Langsung aktifkan izin notifikasi HP secara otomatis bila masih default
+            if ("Notification" in window && Notification.permission === "default") {
+                try {
+                    Notification.requestPermission().catch(() => {});
+                } catch (e) {}
+            }
+
+            ElwaNotificationManager.pruneExpiredNotifications();
+            ElwaNotificationManager.syncBadgeCount();
+
+            setModalTitle("Pusat Informasi & Pemberitahuan", "fa-bell");
             const saveBtn = document.getElementById('modalSaveBtn');
             if (saveBtn) saveBtn.style.display = 'none';
 
-            const permStatus = ("Notification" in window) ? Notification.permission : "unsupported";
-            let permLabel = "Aktif (Siap Muncul di Bar Atas HP)";
-            let permBadgeCls = "bg-emerald-100 text-emerald-800 border-emerald-300";
-            if (permStatus === "default") {
-                permLabel = "Belum Diizinkan (Klik Aktifkan)";
-                permBadgeCls = "bg-amber-100 text-amber-900 border-amber-300";
-            } else if (permStatus === "denied") {
-                permLabel = "Diblokir Pengaturan Browser/HP";
-                permBadgeCls = "bg-rose-100 text-rose-800 border-rose-300";
-            }
-
+            const isAdmin = Boolean(AppState.editMode && AppState.activeRole === 'Super Admin');
             const feed = AppState.notificationsFeed || [];
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-3">
-                    <!-- Status Notifikasi Bar Atas HP & Suara Notifikasi HP -->
-                    <div class="p-3 rounded-2xl bg-slate-900 text-white space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-black uppercase text-amber-300 flex items-center">
-                                <i class="fa-solid fa-volume-high mr-1.5"></i> Notifikasi Bar Atas &amp; Suara HP
-                            </span>
-                            <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${permBadgeCls}">
-                                ${permLabel}
-                            </span>
-                        </div>
-                        <p class="text-[10px] text-slate-300 leading-relaxed">
-                            Setiap ada pembaruan Informasi Sekolah maupun Data Santri, notifikasi muncul di <strong>bar atas HP</strong> mengikuti <strong>suara notifikasi bawaan HP</strong> Anda.
+                    <!-- Informasi Sistem Pembersihan Otomatis 7 Hari -->
+                    <div class="p-3.5 rounded-2xl bg-emerald-950 text-white border border-emerald-800">
+                        <p class="text-[11px] font-bold text-white leading-relaxed flex items-start">
+                            <i class="fa-solid fa-clock-rotate-left text-amber-300 mr-2 mt-0.5 flex-shrink-0"></i>
+                            <span>Riwayat pemberitahuan sekolah/pesantren &amp; santri akan otomatis terhapus setelah 7 hari</span>
                         </p>
-                        <div class="flex items-center space-x-1.5 pt-1">
-                            <button type="button" onclick="requestPhoneNotificationPermission()" class="flex-1 py-1.5 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-elwa-dark font-black text-[10px]">
-                                <i class="fa-solid fa-bell mr-1"></i> Aktifkan Izin Notifikasi HP
-                            </button>
-                            <button type="button" onclick="sendTestPhoneNotification()" class="py-1.5 px-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-[10px] border border-white/20">
-                                <i class="fa-solid fa-paper-plane mr-1 text-emerald-300"></i> Uji Notifikasi
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- Daftar Riwayat Notifikasi -->
-                    <div class="flex items-center justify-between pt-1">
-                        <span class="text-[10px] font-extrabold uppercase text-slate-500">Daftar Pemberitahuan Terbaru (${feed.length})</span>
-                        ${feed.some(n => !n.read) ? `
-                            <button type="button" onclick="markAllFeedNotificationsRead()" class="text-[10px] font-bold text-emerald-700 hover:underline">
-                                Tandai Semua Dibaca
-                            </button>
-                        ` : ''}
+                    <!-- Daftar Riwayat Notifikasi + Aksi Hapus Manual (Khusus Mode Admin) -->
+                    <div class="flex items-center justify-between pt-1 gap-2 flex-wrap">
+                        <span class="text-[10px] font-extrabold uppercase text-slate-500">Daftar Pemberitahuan (${feed.length})</span>
+                        <div class="flex items-center space-x-2">
+                            ${feed.some(n => !n.read) ? `
+                                <button type="button" onclick="markAllFeedNotificationsRead()" class="text-[10px] font-bold text-emerald-700 hover:underline">
+                                    Tandai Semua Dibaca
+                                </button>
+                            ` : ''}
+                            ${isAdmin && feed.length > 0 ? `
+                                <button type="button" onclick="clearAllFeedNotificationsAdmin()" class="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] shadow-2xs flex items-center transition">
+                                    <i class="fa-solid fa-trash-can mr-1 text-[9px]"></i> Hapus Semua Riwayat
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
 
                     ${feed.length === 0 ? `
-                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400 italic">
-                            Belum ada riwayat notifikasi.
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                            <i class="fa-solid fa-bell-slash text-slate-300 text-xl"></i>
+                            <p class="text-xs font-bold text-slate-700">Riwayat Notifikasi Bersih</p>
+                            <p class="text-[10px] text-slate-400">Belum ada pemberitahuan terbaru saat ini.</p>
                         </div>
                     ` : `
-                        <div class="space-y-2 max-h-64 overflow-y-auto pr-0.5">
+                        <div class="space-y-2 max-h-64 overflow-y-auto pr-0.5 overscroll-contain">
                             ${feed.map((n, idx) => `
-                                <div onclick="onFeedNotificationItemClick(${idx})" class="p-3 rounded-2xl border ${n.read ? 'bg-slate-50 border-slate-200' : 'bg-amber-50/70 border-amber-300 shadow-2xs'} cursor-pointer hover:border-emerald-500 transition space-y-1">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded ${n.type === 'school' ? 'bg-emerald-100 text-emerald-900' : 'bg-elwa-dark text-amber-300'}">
-                                            <i class="fa-solid ${n.type === 'school' ? 'fa-school' : 'fa-user-lock'} mr-1"></i>${n.title}
+                                <div onclick="onFeedNotificationItemClick(${idx})" class="p-3 rounded-2xl border ${n.read ? 'bg-slate-50 border-slate-200' : 'bg-amber-50/70 border-amber-300 shadow-2xs'} cursor-pointer hover:border-emerald-500 transition space-y-1.5">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded ${n.type === 'school' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-elwa-dark text-amber-300'}">
+                                            <i class="fa-solid ${n.type === 'school' ? 'fa-school' : 'fa-user-shield'} mr-1"></i>${n.type === 'school' ? 'Info Umum Sekolah' : 'Update Informasi Santri'}
                                         </span>
-                                        <span class="text-[9px] font-semibold text-slate-400">${n.timeLabel || 'Baru saja'}</span>
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="text-[9px] font-semibold text-slate-400">${n.timeLabel || 'Baru saja'}</span>
+                                            ${isAdmin ? `
+                                                <button type="button" onclick="event.stopPropagation(); deleteSingleFeedNotification(${n.id});" class="px-2 py-0.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 font-bold text-[9px] flex items-center transition" title="Hapus Pemberitahuan Ini (Admin)">
+                                                    <i class="fa-solid fa-trash mr-1 text-[8px]"></i> Hapus
+                                                </button>
+                                            ` : ''}
+                                        </div>
                                     </div>
                                     <p class="text-xs font-bold text-slate-900 leading-snug pt-0.5">${n.body}</p>
                                     <span class="text-[9px] font-extrabold text-emerald-700 block pt-0.5">
-                                        ${n.type === 'school' ? 'Ketuk untuk melihat Informasi Sekolah &rarr;' : 'Ketuk & masukkan password santri untuk melihat rincian pembaruan &rarr;'}
+                                        ${n.type === 'school' ? 'Ketuk untuk membuka bagian informasi sekolah &rarr;' : 'Demi privasi, ketuk &amp; masukkan password santri untuk melihat detail perubahannya &rarr;'}
                                     </span>
                                 </div>
                             `).join('')}
@@ -12883,6 +13560,51 @@
                 </div>
             `;
             openModal();
+        }
+
+        // Hapus satu riwayat pemberitahuan secara manual (Khusus Mode Admin)
+        function deleteSingleFeedNotification(notifId) {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menghapus riwayat pemberitahuan secara manual!", "error");
+                return;
+            }
+            const target = (AppState.notificationsFeed || []).find(n => Number(n.id) === Number(notifId));
+            AppState.notificationsFeed = (AppState.notificationsFeed || []).filter(n => Number(n.id) !== Number(notifId));
+
+            // Jika pemberitahuan santri dihapus oleh Admin, bersihkan juga pendingUpdates yang belum terbaca pada santri terkait bila sudah tidak ada di feed
+            if (target && target.type === 'student' && typeof target.childIdx === 'number') {
+                const stillHasFeedForChild = (AppState.notificationsFeed || []).some(n => n.type === 'student' && n.childIdx === target.childIdx);
+                const child = AppState.children[target.childIdx];
+                if (!stillHasFeedForChild && child && Array.isArray(child.pendingUpdates)) {
+                    child.pendingUpdates = [];
+                }
+            }
+
+            ElwaNotificationManager.syncBadgeCount();
+            renderStudentList();
+            renderChildPortal();
+            openNotificationCenterModal();
+            showToast("Pemberitahuan berhasil dihapus!", "info");
+        }
+
+        // Hapus seluruh riwayat pemberitahuan secara manual (Khusus Mode Admin)
+        function clearAllFeedNotificationsAdmin() {
+            if (!AppState.editMode || AppState.activeRole !== 'Super Admin') {
+                showToast("Hanya Mode Admin yang dapat menghapus riwayat pemberitahuan secara manual!", "error");
+                return;
+            }
+            AppState.notificationsFeed = [];
+            (AppState.children || []).forEach(c => {
+                if (Array.isArray(c.pendingUpdates)) {
+                    c.pendingUpdates = [];
+                }
+            });
+
+            ElwaNotificationManager.syncBadgeCount();
+            renderStudentList();
+            renderChildPortal();
+            openNotificationCenterModal();
+            showToast("Seluruh riwayat pemberitahuan berhasil dibersihkan oleh Admin!", "info");
         }
 
         function onFeedNotificationItemClick(feedIdx) {
